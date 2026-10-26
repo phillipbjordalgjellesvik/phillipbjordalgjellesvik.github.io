@@ -32,7 +32,7 @@ fred_resp = requests.get(
         "api_key": FRED_KEY,
         "file_type": "json",
         "sort_order": "desc",
-        "limit": 180,
+        "limit": 1300,
     },
     timeout=30,
 ).json()
