@@ -16,6 +16,11 @@
     .label { color: #8b95a5; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; }
     .inverted { color: #ff6b6b; }
     .normal { color: #4cd964; }
+        .selection-box { margin-top: 12px; padding: 10px 12px; background: #11161d; border-radius: 8px; font-size: 0.88rem; line-height: 1.5; color: #b8c0cc; min-height: 20px; }
+    .selection-box b { color: #e6e9ef; }
+    .clear-btn { margin-top: 8px; background: #2a3340; color: #e6e9ef; border: none; border-radius: 6px; padding: 6px 12px; font-size: 0.82rem; cursor: pointer; display: none; }
+    .clear-btn:hover { background: #364254; }
+    canvas { cursor: crosshair; }
     footer { text-align: center; color: #8b95a5; font-size: 0.85rem; padding: 20px; }
   </style>
 </head>
@@ -31,6 +36,8 @@
       <div class="big" id="btc-price">...</div>
       <div id="btc-change"></div>
       <canvas id="btc-chart"></canvas>
+            <div id="btc-selection" class="selection-box">Click and drag across the chart to mark a period.</div>
+      <button class="clear-btn" id="btc-clear">Clear selection</button>
     </div>
 
     <div class="card">
@@ -38,6 +45,8 @@
       <div class="big" id="curve-value">...</div>
       <div id="curve-status"></div>
       <canvas id="curve-chart"></canvas>
+            <div id="curve-selection" class="selection-box">Click and drag across the chart to mark a period.</div>
+      <button class="clear-btn" id="curve-clear">Clear selection</button>
        <div id="curve-explainer" style="margin-top: 16px; padding-top: 14px; border-top: 1px solid #2a3340; font-size: 0.92rem; line-height: 1.5; color: #b8c0cc;">
         <div id="explainer-headline" style="font-weight: 700; font-size: 1rem; margin-bottom: 6px;"></div>
         <p id="explainer-body" style="margin: 0 0 8px;"></p>
@@ -56,6 +65,80 @@
   <footer>Last updated: <span id="updated">...</span></footer>
 
   <script>
+        // Drag-to-mark helper: shades a period and describes it in text
+    function enableSelection(chart, boxId, clearId, labels, values, fmt, unitLabel) {
+      const canvas = chart.canvas;
+      const box = document.getElementById(boxId);
+      const clearBtn = document.getElementById(clearId);
+      const defaultText = 'Click and drag across the chart to mark a period.';
+      let startIdx = null, endIdx = null, dragging = false;
+
+      const bandPlugin = {
+        id: 'band_' + boxId,
+        beforeDatasetsDraw(c) {
+          if (startIdx === null || endIdx === null) return;
+          const a = Math.min(startIdx, endIdx), b = Math.max(startIdx, endIdx);
+          const xs = c.scales.x, area = c.chartArea;
+          const x1 = xs.getPixelForValue(a), x2 = xs.getPixelForValue(b);
+          const ctx = c.ctx;
+          ctx.save();
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+          ctx.fillRect(x1, area.top, Math.max(x2 - x1, 2), area.bottom - area.top);
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(x1, area.top); ctx.lineTo(x1, area.bottom);
+          ctx.moveTo(x2, area.top); ctx.lineTo(x2, area.bottom);
+          ctx.stroke();
+          ctx.restore();
+        }
+      };
+      chart.config.plugins = (chart.config.plugins || []).concat(bandPlugin);
+      chart.update();
+
+      function indexFromEvent(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const x = clientX - rect.left;
+        const xs = chart.scales.x;
+        let idx = Math.round(xs.getValueForPixel(x));
+        return Math.max(0, Math.min(labels.length - 1, idx));
+      }
+
+      function describe() {
+        if (startIdx === null || endIdx === null) { box.textContent = defaultText; clearBtn.style.display = 'none'; return; }
+        const a = Math.min(startIdx, endIdx), b = Math.max(startIdx, endIdx);
+        if (a === b) { box.textContent = defaultText; return; }
+        const slice = values.slice(a, b + 1);
+        const lo = Math.min(...slice), hi = Math.max(...slice);
+        const loDate = labels[a + slice.indexOf(lo)], hiDate = labels[a + slice.indexOf(hi)];
+        const change = values[b] - values[a];
+        const sign = change >= 0 ? '+' : '';
+        let changeText = sign + fmt(change);
+        if (unitLabel === '$') {
+          const pct = (change / values[a]) * 100;
+          changeText += ' (' + sign + pct.toFixed(1) + '%)';
+        }
+        box.innerHTML =
+          '<b>' + labels[a] + '</b> to <b>' + labels[b] + '</b> (' + (b - a) + ' data points)<br>' +
+          'Start: <b>' + fmt(values[a]) + '</b> &nbsp; End: <b>' + fmt(values[b]) + '</b> &nbsp; Change: <b>' + changeText + '</b><br>' +
+          'Low: <b>' + fmt(lo) + '</b> on ' + loDate + ' &nbsp; High: <b>' + fmt(hi) + '</b> on ' + hiDate;
+        clearBtn.style.display = 'inline-block';
+      }
+
+      function down(e) { dragging = true; startIdx = indexFromEvent(e); endIdx = startIdx; chart.draw(); }
+      function move(e) { if (!dragging) return; endIdx = indexFromEvent(e); chart.draw(); describe(); }
+      function up() { dragging = false; describe(); }
+
+      canvas.addEventListener('mousedown', down);
+      canvas.addEventListener('mousemove', move);
+      window.addEventListener('mouseup', up);
+      canvas.addEventListener('touchstart', e => { e.preventDefault(); down(e); }, { passive: false });
+      canvas.addEventListener('touchmove', e => { e.preventDefault(); move(e); }, { passive: false });
+      canvas.addEventListener('touchend', up);
+
+      clearBtn.addEventListener('click', () => { startIdx = endIdx = null; chart.draw(); describe(); });
+    }
     fetch('data.json?t=' + Date.now())
       .then(r => r.json())
       .then(d => {
@@ -87,17 +170,23 @@
         }
         document.getElementById('updated').textContent = new Date(d.updated).toLocaleString();
 
-        new Chart(document.getElementById('btc-chart'), {
+                const btcChart = new Chart(document.getElementById('btc-chart'), {
           type: 'line',
           data: { labels: d.bitcoin.history.map(p => p[0]),
                   datasets: [{ data: d.bitcoin.history.map(p => p[1]), borderColor: '#f7931a', pointRadius: 0, tension: 0.2 }] },
           options: { plugins: { legend: { display: false } }, scales: { x: { ticks: { maxTicksLimit: 5 } } } }
         });
-
+        enableSelection(
+          btcChart, 'btc-selection', 'btc-clear',
+          d.bitcoin.history.map(p => p[0]),
+          d.bitcoin.history.map(p => p[1]),
+          v => '$' + Math.round(v).toLocaleString(),
+          '$'
+        );
         const curveLabels = d.yield_curve.history.map(p => p[0]);
         const curveValues = d.yield_curve.history.map(p => p[1]);
 
-        new Chart(document.getElementById('curve-chart'), {
+                const curveChart = new Chart(document.getElementById('curve-chart'), {
           type: 'line',
           data: {
             labels: curveLabels,
@@ -145,6 +234,13 @@
             }
           }
         });
+                enableSelection(
+          curveChart, 'curve-selection', 'curve-clear',
+          curveLabels,
+          curveValues,
+          v => v.toFixed(2) + '%',
+          '%'
+        );
       })
       .catch(e => { document.getElementById('summary').textContent = 'Data not available yet. Run the update workflow once (see Step 5).'; });
   </script>
