@@ -3,69 +3,266 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Phillip's Page</title>
+  <title>Phillip Bjordal Gjellesvik</title>
+  <meta name="description" content="Business student at BI Norwegian Business School with a strong interest in financial markets.">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { font-family: -apple-system, Segoe UI, Roboto, sans-serif; background: #0f1419; color: #e6e9ef; margin: 0; padding: 0; }
-    header { padding: 40px 20px 10px; text-align: center; }
-    h1 { margin: 0 0 8px; }
-    .sub { color: #8b95a5; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; max-width: 1000px; margin: 30px auto; padding: 0 20px; }
-    .card { background: #1a2029; border-radius: 12px; padding: 20px; }
+    :root {
+      --bg: #0f1419;
+      --card: #1a2029;
+      --card-soft: #11161d;
+      --line: #2a3340;
+      --text: #e6e9ef;
+      --muted: #8b95a5;
+      --soft: #b8c0cc;
+      --accent: #5ac8fa;
+      --good: #4cd964;
+      --bad: #ff6b6b;
+      --btc: #f7931a;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); margin: 0; line-height: 1.6; }
+
+    /* ---------- Top bar ---------- */
+    nav { position: sticky; top: 0; z-index: 10; background: rgba(15, 20, 25, 0.92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+    .nav-inner { max-width: 1000px; margin: 0 auto; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .brand { font-weight: 700; letter-spacing: 0.02em; }
+    .tabs { display: flex; gap: 8px; }
+    .tab { background: transparent; color: var(--soft); border: 1px solid var(--line); border-radius: 999px; padding: 8px 18px; font-size: 0.92rem; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+    .tab:hover { border-color: var(--accent); color: var(--text); }
+    .tab.active { background: var(--accent); border-color: var(--accent); color: #0b1016; font-weight: 600; }
+
+    main { max-width: 1000px; margin: 0 auto; padding: 0 20px 40px; }
+    section.page { display: none; animation: fade 0.3s ease; }
+    section.page.active { display: block; }
+    @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+    /* ---------- About page ---------- */
+    .hero { display: flex; align-items: center; gap: 32px; padding: 56px 0 36px; flex-wrap: wrap; }
+    .avatar { width: 160px; height: 160px; border-radius: 50%; object-fit: cover; border: 3px solid var(--line); background: var(--card); flex-shrink: 0; }
+    .avatar-fallback { width: 160px; height: 160px; border-radius: 50%; background: linear-gradient(135deg, #2a3340, #1a2029); border: 3px solid var(--line); display: none; align-items: center; justify-content: center; font-size: 2.6rem; font-weight: 700; color: var(--accent); flex-shrink: 0; }
+    .hero-text { flex: 1; min-width: 260px; }
+    .hero h1 { font-size: 2.4rem; margin: 0 0 4px; line-height: 1.15; }
+    .role { color: var(--accent); font-size: 1.1rem; margin-bottom: 14px; }
+    .pitch { color: var(--soft); max-width: 560px; margin: 0 0 18px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+    .chip { background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; font-size: 0.82rem; color: var(--soft); }
+    .contact a { color: var(--text); text-decoration: none; border-bottom: 1px solid var(--accent); padding-bottom: 1px; }
+    .contact a:hover { color: var(--accent); }
+
+    h2.section-title { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); margin: 40px 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+    .entry { background: var(--card); border-radius: 12px; padding: 18px 20px; margin-bottom: 12px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .entry .title { font-weight: 600; font-size: 1.02rem; }
+    .entry .where { color: var(--soft); font-size: 0.92rem; }
+    .entry .note { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
+    .entry .when { color: var(--muted); font-size: 0.88rem; white-space: nowrap; }
+    .two-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+
+    /* ---------- Dashboard ---------- */
+    .dash-intro { padding: 48px 0 8px; }
+    .dash-intro h1 { font-size: 2rem; margin: 0 0 8px; }
+    .dash-intro p { color: var(--soft); max-width: 640px; margin: 0; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 20px; margin-top: 28px; }
+    @media (max-width: 480px) { .grid { grid-template-columns: 1fr; } }
+    .card { background: var(--card); border-radius: 12px; padding: 20px; min-width: 0; }
     .big { font-size: 2.2rem; font-weight: 700; margin: 6px 0; }
-    .label { color: #8b95a5; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; }
-    .inverted { color: #ff6b6b; }
-    .normal { color: #4cd964; }
-        .selection-box { margin-top: 12px; padding: 10px 12px; background: #11161d; border-radius: 8px; font-size: 0.88rem; line-height: 1.5; color: #b8c0cc; min-height: 20px; }
-    .selection-box b { color: #e6e9ef; }
-    .clear-btn { margin-top: 8px; background: #2a3340; color: #e6e9ef; border: none; border-radius: 6px; padding: 6px 12px; font-size: 0.82rem; cursor: pointer; display: none; }
+    .label { color: var(--muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .inverted { color: var(--bad); }
+    .normal { color: var(--good); }
+    .selection-box { margin-top: 12px; padding: 10px 12px; background: var(--card-soft); border-radius: 8px; font-size: 0.88rem; line-height: 1.5; color: var(--soft); min-height: 20px; }
+    .selection-box b { color: var(--text); }
+    .clear-btn { margin-top: 8px; background: var(--line); color: var(--text); border: none; border-radius: 6px; padding: 6px 12px; font-size: 0.82rem; cursor: pointer; display: none; font-family: inherit; }
     .clear-btn:hover { background: #364254; }
     canvas { cursor: crosshair; }
-    footer { text-align: center; color: #8b95a5; font-size: 0.85rem; padding: 20px; }
+    .explainer { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 0.92rem; line-height: 1.5; color: var(--soft); }
+    .explainer .head { font-weight: 700; font-size: 1rem; margin-bottom: 6px; }
+    .explainer p { margin: 0 0 8px; }
+    .explainer .fine { color: var(--muted); font-size: 0.82rem; margin: 0; }
+    .summary-card { margin-top: 20px; }
+
+    footer { text-align: center; color: var(--muted); font-size: 0.82rem; padding: 24px 20px 40px; border-top: 1px solid var(--line); max-width: 1000px; margin: 0 auto; }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Hi, I'm Phillip</h1>
-    <div class="sub">Tracking Bitcoin and the yield curve</div>
-  </header>
 
-  <div class="grid">
-    <div class="card">
-      <div class="label">Bitcoin (USD)</div>
-      <div class="big" id="btc-price">...</div>
-      <div id="btc-change"></div>
-      <canvas id="btc-chart"></canvas>
-            <div id="btc-selection" class="selection-box">Click and drag across the chart to mark a period.</div>
-      <button class="clear-btn" id="btc-clear">Clear selection</button>
-    </div>
-
-    <div class="card">
-      <div class="label">10Y minus 2Y Treasury spread</div>
-      <div class="big" id="curve-value">...</div>
-      <div id="curve-status"></div>
-      <canvas id="curve-chart"></canvas>
-            <div id="curve-selection" class="selection-box">Click and drag across the chart to mark a period.</div>
-      <button class="clear-btn" id="curve-clear">Clear selection</button>
-       <div id="curve-explainer" style="margin-top: 16px; padding-top: 14px; border-top: 1px solid #2a3340; font-size: 0.92rem; line-height: 1.5; color: #b8c0cc;">
-        <div id="explainer-headline" style="font-weight: 700; font-size: 1rem; margin-bottom: 6px;"></div>
-        <p id="explainer-body" style="margin: 0 0 8px;"></p>
-        <p style="margin: 0; color: #8b95a5; font-size: 0.82rem;">Historically, inversions have come before most US recessions, usually 6 to 24 months ahead, but the timing is unreliable and it is not a guarantee.</p>
+  <nav>
+    <div class="nav-inner">
+      <div class="brand">Phillip Bjordal Gjellesvik</div>
+      <div class="tabs">
+        <button class="tab active" data-page="about">About me</button>
+        <button class="tab" data-page="follow">What I follow</button>
       </div>
     </div>
-  </div>
+  </nav>
 
-  <div class="grid">
-    <div class="card" style="grid-column: 1 / -1;">
-      <div class="label">Summary</div>
-      <p id="summary">Loading...</p>
-    </div>
-  </div>
+  <main>
 
-  <footer>Last updated: <span id="updated">...</span></footer>
+    <!-- ================= ABOUT ME ================= -->
+    <section class="page active" id="page-about">
+
+      <div class="hero">
+        <img class="avatar" id="avatar" src="me.jpg" alt="Phillip Bjordal Gjellesvik">
+        <div class="avatar-fallback" id="avatar-fallback">PG</div>
+        <div class="hero-text">
+          <h1>Phillip Bjordal Gjellesvik</h1>
+          <div class="role">Business student at BI Norwegian Business School</div>
+          <p class="pitch">I am a bachelor student in business administration with a strong interest in financial markets, particularly Bitcoin and the US Treasury yield curve. I combine an international education with hands-on experience in customer service, delivery and transport, and I enjoy negotiation, problem solving and working with people.</p>
+          <div class="chips">
+            <span class="chip">Financial markets</span>
+            <span class="chip">Bitcoin</span>
+            <span class="chip">Bond markets</span>
+            <span class="chip">Negotiation</span>
+            <span class="chip">Fluent in English and Norwegian</span>
+          </div>
+          <div class="contact">Get in touch: <a href="mailto:Phillipbjordal@gmail.com">Phillipbjordal@gmail.com</a></div>
+        </div>
+      </div>
+
+      <h2 class="section-title">Education</h2>
+      <div class="entry">
+        <div>
+          <div class="title">Bachelor of Business Administration (BBA)</div>
+          <div class="where">BI Norwegian Business School, Oslo, Norway</div>
+        </div>
+        <div class="when">2024 to 2027</div>
+      </div>
+      <div class="entry">
+        <div>
+          <div class="title">High school diploma</div>
+          <div class="where">Park School, Baltimore, USA</div>
+        </div>
+        <div class="when">2019 to 2022</div>
+      </div>
+
+      <h2 class="section-title">Work experience</h2>
+      <div class="entry">
+        <div>
+          <div class="title">Driver</div>
+          <div class="where">Husby Taxi</div>
+        </div>
+        <div class="when">October 2026 to present</div>
+      </div>
+      <div class="entry">
+        <div>
+          <div class="title">Rider</div>
+          <div class="where">Foodora Norway</div>
+          <div class="note">Food delivery, working independently and to tight time targets.</div>
+        </div>
+        <div class="when">June 2024 to present</div>
+      </div>
+      <div class="entry">
+        <div>
+          <div class="title">Convenience store worker</div>
+          <div class="where">Joker Jar</div>
+          <div class="note">Customer service and day-to-day store operations.</div>
+        </div>
+        <div class="when">August 2022 to December 2023</div>
+      </div>
+      <div class="entry">
+        <div>
+          <div class="title">Car mechanic experience (Park School senior project)</div>
+          <div class="where">Hollenshades Auto Services, Maryland, USA</div>
+        </div>
+        <div class="when">April to June 2022</div>
+      </div>
+
+      <div class="two-col">
+        <div>
+          <h2 class="section-title">Achievements</h2>
+          <div class="entry">
+            <div>
+              <div class="title">Second place</div>
+              <div class="where">Athens Negotiations Tournament, The World Edition</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h2 class="section-title">Languages and licence</h2>
+          <div class="entry">
+            <div>
+              <div class="title">English: fluent</div>
+              <div class="title">Norwegian: fluent</div>
+              <div class="note">Driving licence: class C1</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="section-title">References</h2>
+      <div class="entry">
+        <div>
+          <div class="where">References are available on request. Please get in touch by email.</div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ================= WHAT I FOLLOW ================= -->
+    <section class="page" id="page-follow">
+
+      <div class="dash-intro">
+        <h1>What I follow</h1>
+        <p>Two markets I track closely: Bitcoin, and the gap between 10-year and 2-year US Treasury yields, a classic recession signal. This page updates automatically every hour.</p>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <div class="label">Bitcoin (USD)</div>
+          <div class="big" id="btc-price">...</div>
+          <div id="btc-change"></div>
+          <canvas id="btc-chart"></canvas>
+          <div id="btc-selection" class="selection-box">Click and drag across the chart to mark a period.</div>
+          <button class="clear-btn" id="btc-clear">Clear selection</button>
+        </div>
+
+        <div class="card">
+          <div class="label">10Y minus 2Y Treasury spread</div>
+          <div class="big" id="curve-value">...</div>
+          <div id="curve-status"></div>
+          <canvas id="curve-chart"></canvas>
+          <div id="curve-selection" class="selection-box">Click and drag across the chart to mark a period.</div>
+          <button class="clear-btn" id="curve-clear">Clear selection</button>
+          <div class="explainer">
+            <div class="head" id="explainer-headline"></div>
+            <p id="explainer-body"></p>
+            <p class="fine">Historically, inversions have come before most US recessions, usually 6 to 24 months ahead, but the timing is unreliable and it is not a guarantee.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card summary-card">
+        <div class="label">Summary</div>
+        <p id="summary" style="margin: 8px 0 0;">Loading...</p>
+      </div>
+
+    </section>
+  </main>
+
+  <footer>Market data last updated: <span id="updated">...</span><br>Sources: CoinGecko and FRED (Federal Reserve Bank of St. Louis). For information only, not financial advice.</footer>
 
   <script>
-        // Drag-to-mark helper: shades a period and describes it in text
+    // ---------- Photo fallback ----------
+    const avatar = document.getElementById('avatar');
+    avatar.addEventListener('error', () => {
+      avatar.style.display = 'none';
+      document.getElementById('avatar-fallback').style.display = 'flex';
+    });
+
+    // ---------- Section switching ----------
+    const tabs = document.querySelectorAll('.tab');
+    const pages = { about: document.getElementById('page-about'), follow: document.getElementById('page-follow') };
+    function showPage(name) {
+      tabs.forEach(t => t.classList.toggle('active', t.dataset.page === name));
+      Object.keys(pages).forEach(k => pages[k].classList.toggle('active', k === name));
+      history.replaceState(null, '', '#' + name);
+      window.scrollTo({ top: 0 });
+      window.dispatchEvent(new Event('resize'));
+    }
+    tabs.forEach(t => t.addEventListener('click', () => showPage(t.dataset.page)));
+    if (location.hash === '#follow') showPage('follow');
+
+    // ---------- Drag-to-mark helper: shades a period and describes it ----------
     function enableSelection(chart, boxId, clearId, labels, values, fmt, unitLabel) {
       const canvas = chart.canvas;
       const box = document.getElementById(boxId);
@@ -100,8 +297,7 @@
         const rect = canvas.getBoundingClientRect();
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
         const x = clientX - rect.left;
-        const xs = chart.scales.x;
-        let idx = Math.round(xs.getValueForPixel(x));
+        let idx = Math.round(chart.scales.x.getValueForPixel(x));
         return Math.max(0, Math.min(labels.length - 1, idx));
       }
 
@@ -136,19 +332,22 @@
       canvas.addEventListener('touchstart', e => { e.preventDefault(); down(e); }, { passive: false });
       canvas.addEventListener('touchmove', e => { e.preventDefault(); move(e); }, { passive: false });
       canvas.addEventListener('touchend', up);
-
       clearBtn.addEventListener('click', () => { startIdx = endIdx = null; chart.draw(); describe(); });
     }
+
+    // ---------- Load market data ----------
     fetch('data.json?t=' + Date.now())
       .then(r => r.json())
       .then(d => {
+        // Bitcoin header
         document.getElementById('btc-price').textContent =
-          '$' + d.bitcoin.price.toLocaleString(undefined, {maximumFractionDigits: 0});
+          '$' + d.bitcoin.price.toLocaleString(undefined, { maximumFractionDigits: 0 });
         const ch = d.bitcoin.change_24h;
         const chEl = document.getElementById('btc-change');
         chEl.textContent = (ch >= 0 ? '+' : '') + ch.toFixed(2) + '% in 24h';
         chEl.className = ch >= 0 ? 'normal' : 'inverted';
 
+        // Yield curve header
         const spread = d.yield_curve.latest;
         document.getElementById('curve-value').textContent = spread.toFixed(2) + '%';
         const st = document.getElementById('curve-status');
@@ -156,7 +355,10 @@
         else { st.textContent = 'Normal (positive slope)'; st.className = 'normal'; }
 
         document.getElementById('summary').textContent = d.summary;
-                const head = document.getElementById('explainer-headline');
+        document.getElementById('updated').textContent = new Date(d.updated).toLocaleString();
+
+        // Explainer
+        const head = document.getElementById('explainer-headline');
         const body = document.getElementById('explainer-body');
         const abs = Math.abs(spread).toFixed(2);
         if (spread < 0) {
@@ -168,25 +370,26 @@
           head.style.color = '#4cd964';
           body.textContent = 'The 10-year Treasury yield is above the 2-year yield, which is the usual upward-sloping shape. It means lenders are being paid more for tying money up longer, and the bond market is not flashing its classic recession warning right now. Note that recessions have often started after the curve un-inverts, so a return to positive is not automatically all clear.';
         }
-        document.getElementById('updated').textContent = new Date(d.updated).toLocaleString();
 
-                const btcChart = new Chart(document.getElementById('btc-chart'), {
+        // Bitcoin chart
+        const btcLabels = d.bitcoin.history.map(p => p[0]);
+        const btcValues = d.bitcoin.history.map(p => p[1]);
+        const btcChart = new Chart(document.getElementById('btc-chart'), {
           type: 'line',
-          data: { labels: d.bitcoin.history.map(p => p[0]),
-                  datasets: [{ data: d.bitcoin.history.map(p => p[1]), borderColor: '#f7931a', pointRadius: 0, tension: 0.2 }] },
-          options: { plugins: { legend: { display: false } }, scales: { x: { ticks: { maxTicksLimit: 5 } } } }
+          data: { labels: btcLabels, datasets: [{ data: btcValues, borderColor: '#f7931a', borderWidth: 1.5, pointRadius: 0, pointHoverRadius: 4, tension: 0.2 }] },
+          options: {
+            interaction: { mode: 'index', intersect: false },
+            plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => '$' + Math.round(ctx.parsed.y).toLocaleString() } } },
+            scales: { x: { ticks: { maxTicksLimit: 5 } }, y: { ticks: { callback: v => '$' + v.toLocaleString() } } }
+          }
         });
-        enableSelection(
-          btcChart, 'btc-selection', 'btc-clear',
-          d.bitcoin.history.map(p => p[0]),
-          d.bitcoin.history.map(p => p[1]),
-          v => '$' + Math.round(v).toLocaleString(),
-          '$'
-        );
+        enableSelection(btcChart, 'btc-selection', 'btc-clear', btcLabels, btcValues,
+          v => '$' + Math.round(v).toLocaleString(), '$');
+
+        // Yield curve chart
         const curveLabels = d.yield_curve.history.map(p => p[0]);
         const curveValues = d.yield_curve.history.map(p => p[1]);
-
-                const curveChart = new Chart(document.getElementById('curve-chart'), {
+        const curveChart = new Chart(document.getElementById('curve-chart'), {
           type: 'line',
           data: {
             labels: curveLabels,
@@ -199,11 +402,7 @@
                 pointRadius: 0,
                 pointHoverRadius: 5,
                 tension: 0.1,
-                fill: {
-                  target: 'origin',
-                  above: 'rgba(76, 217, 100, 0.10)',
-                  below: 'rgba(255, 107, 107, 0.35)'
-                }
+                fill: { target: 'origin', above: 'rgba(76, 217, 100, 0.10)', below: 'rgba(255, 107, 107, 0.35)' }
               },
               {
                 label: 'Zero line',
@@ -223,26 +422,18 @@
               legend: { display: false },
               tooltip: {
                 filter: item => item.datasetIndex === 0,
-                callbacks: {
-                  label: ctx => ctx.parsed.y.toFixed(2) + '%' + (ctx.parsed.y < 0 ? ' (inverted)' : '')
-                }
+                callbacks: { label: ctx => ctx.parsed.y.toFixed(2) + '%' + (ctx.parsed.y < 0 ? ' (inverted)' : '') }
               }
             },
-            scales: {
-              x: { ticks: { maxTicksLimit: 6 } },
-              y: { ticks: { callback: v => v + '%' } }
-            }
+            scales: { x: { ticks: { maxTicksLimit: 6 } }, y: { ticks: { callback: v => v + '%' } } }
           }
         });
-                enableSelection(
-          curveChart, 'curve-selection', 'curve-clear',
-          curveLabels,
-          curveValues,
-          v => v.toFixed(2) + '%',
-          '%'
-        );
+        enableSelection(curveChart, 'curve-selection', 'curve-clear', curveLabels, curveValues,
+          v => v.toFixed(2) + '%', '%');
       })
-      .catch(e => { document.getElementById('summary').textContent = 'Data not available yet. Run the update workflow once (see Step 5).'; });
+      .catch(e => {
+        document.getElementById('summary').textContent = 'Market data is not available right now. It refreshes automatically every hour.';
+      });
   </script>
 </body>
 </html>
