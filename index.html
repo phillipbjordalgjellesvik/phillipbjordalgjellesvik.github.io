@@ -77,11 +77,56 @@
           options: { plugins: { legend: { display: false } }, scales: { x: { ticks: { maxTicksLimit: 5 } } } }
         });
 
+        const curveLabels = d.yield_curve.history.map(p => p[0]);
+        const curveValues = d.yield_curve.history.map(p => p[1]);
+
         new Chart(document.getElementById('curve-chart'), {
           type: 'line',
-          data: { labels: d.yield_curve.history.map(p => p[0]),
-                  datasets: [{ data: d.yield_curve.history.map(p => p[1]), borderColor: '#5ac8fa', pointRadius: 0, tension: 0.2 }] },
-          options: { plugins: { legend: { display: false } }, scales: { x: { ticks: { maxTicksLimit: 5 } } } }
+          data: {
+            labels: curveLabels,
+            datasets: [
+              {
+                label: '10Y minus 2Y spread',
+                data: curveValues,
+                borderColor: '#5ac8fa',
+                borderWidth: 1.5,
+                pointRadius: 0,
+                pointHoverRadius: 5,
+                tension: 0.1,
+                fill: {
+                  target: 'origin',
+                  above: 'rgba(76, 217, 100, 0.10)',
+                  below: 'rgba(255, 107, 107, 0.35)'
+                }
+              },
+              {
+                label: 'Zero line',
+                data: curveLabels.map(() => 0),
+                borderColor: '#ffffff',
+                borderWidth: 1,
+                borderDash: [6, 6],
+                pointRadius: 0,
+                pointHoverRadius: 0,
+                fill: false
+              }
+            ]
+          },
+          options: {
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                filter: item => item.datasetIndex === 0,
+                callbacks: {
+                  label: ctx => ctx.parsed.y.toFixed(2) + '%' + (ctx.parsed.y < 0 ? ' (inverted)' : '')
+                }
+              }
+            },
+            scales: {
+              x: { ticks: { maxTicksLimit: 6 } },
+              y: { ticks: { callback: v => v + '%' } }
+            }
+          }
         });
       })
       .catch(e => { document.getElementById('summary').textContent = 'Data not available yet. Run the update workflow once (see Step 5).'; });
