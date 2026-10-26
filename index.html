@@ -75,6 +75,10 @@
     .clear-btn { margin-top: 8px; background: var(--line); color: var(--text); border: none; border-radius: 6px; padding: 6px 12px; font-size: 0.82rem; cursor: pointer; display: none; font-family: inherit; }
     .clear-btn:hover { background: #364254; }
     canvas { cursor: crosshair; }
+        .range-row { display: flex; gap: 6px; margin: 10px 0 6px; }
+    .range-btn { background: transparent; color: var(--soft); border: 1px solid var(--line); border-radius: 6px; padding: 4px 12px; font-size: 0.82rem; cursor: pointer; font-family: inherit; }
+    .range-btn:hover { border-color: var(--accent); color: var(--text); }
+    .range-btn.active { background: var(--accent); border-color: var(--accent); color: #0b1016; font-weight: 600; }
     .explainer { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 0.92rem; line-height: 1.5; color: var(--soft); }
     .explainer .head { font-weight: 700; font-size: 1rem; margin-bottom: 6px; }
     .explainer p { margin: 0 0 8px; }
@@ -220,6 +224,13 @@
           <div class="label">10Y minus 2Y Treasury spread</div>
           <div class="big" id="curve-value">...</div>
           <div id="curve-status"></div>
+                    <div class="range-row" id="curve-ranges">
+            <button class="range-btn" data-years="1">1Y</button>
+            <button class="range-btn" data-years="5">5Y</button>
+            <button class="range-btn" data-years="10">10Y</button>
+            <button class="range-btn" data-years="25">25Y</button>
+            <button class="range-btn active" data-years="0">Max</button>
+          </div>
           <canvas id="curve-chart"></canvas>
           <div id="curve-selection" class="selection-box">Click and drag across the chart to mark a period.</div>
           <button class="clear-btn" id="curve-clear">Clear selection</button>
@@ -263,47 +274,55 @@
     if (location.hash === '#follow') showPage('follow');
 
     // ---------- Drag-to-mark helper: shades a period and describes it ----------
-    function enableSelection(chart, boxId, clearId, labels, values, fmt, unitLabel) {
+       function enableSelection(chart, boxId, clearId, getLabels, getValues, fmt, unitLabel) {
       const canvas = chart.canvas;
       const box = document.getElementById(boxId);
       const clearBtn = document.getElementById(clearId);
       const defaultText = 'Click and drag across the chart to mark a period.';
-      let startIdx = null, endIdx = null, dragging = false;
+      const sel = { a: null, b: null, dragging: false };
 
-      const bandPlugin = {
-        id: 'band_' + boxId,
-        beforeDatasetsDraw(c) {
-          if (startIdx === null || endIdx === null) return;
-          const a = Math.min(startIdx, endIdx), b = Math.max(startIdx, endIdx);
-          const xs = c.scales.x, area = c.chartArea;
-          const x1 = xs.getPixelForValue(a), x2 = xs.getPixelForValue(b);
+      // Plugin that draws a clearly visible highlight box in pixel space
+      const boxPlugin = {
+        id: 'markBox_' + boxId,
+        afterDraw(c) {
+          if (sel.a === null || sel.b === null) return;
+          const area = c.chartArea;
+          const left = Math.max(area.left, Math.min(sel.a, sel.b));
+          const right = Math.min(area.right, Math.max(sel.a, sel.b));
+          const w = Math.max(right - left, 2);
           const ctx = c.ctx;
           ctx.save();
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
-          ctx.fillRect(x1, area.top, Math.max(x2 - x1, 2), area.bottom - area.top);
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(x1, area.top); ctx.lineTo(x1, area.bottom);
-          ctx.moveTo(x2, area.top); ctx.lineTo(x2, area.bottom);
-          ctx.stroke();
+          ctx.fillStyle = 'rgba(90, 200, 250, 0.22)';
+          ctx.fillRect(left, area.top, w, area.bottom - area.top);
+          ctx.strokeStyle = 'rgba(90, 200, 250, 0.95)';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(left, area.top, w, area.bottom - area.top);
           ctx.restore();
         }
       };
-      chart.config.plugins = (chart.config.plugins || []).concat(bandPlugin);
+      chart.config.plugins = (chart.config.plugins || []).concat(boxPlugin);
       chart.update();
 
-      function indexFromEvent(e) {
+      function pixelFromEvent(e) {
         const rect = canvas.getBoundingClientRect();
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const x = clientX - rect.left;
-        let idx = Math.round(chart.scales.x.getValueForPixel(x));
-        return Math.max(0, Math.min(labels.length - 1, idx));
+        // account for any CSS scaling of the canvas
+        const scale = canvas.width / rect.width / (window.devicePixelRatio || 1);
+        const x = (clientX - rect.left) * scale;
+        return Math.max(chart.chartArea.left, Math.min(chart.chartArea.right, x));
+      }
+
+      function indexFromPixel(px, n) {
+        const xs = chart.scales.x;
+        const idx = Math.round(xs.getValueForPixel(px));
+        return Math.max(0, Math.min(n - 1, idx));
       }
 
       function describe() {
-        if (startIdx === null || endIdx === null) { box.textContent = defaultText; clearBtn.style.display = 'none'; return; }
-        const a = Math.min(startIdx, endIdx), b = Math.max(startIdx, endIdx);
+        const labels = getLabels(), values = getValues();
+        if (sel.a === null || sel.b === null) { box.textContent = defaultText; clearBtn.style.display = 'none'; return; }
+        let a = indexFromPixel(Math.min(sel.a, sel.b), labels.length);
+        let b = indexFromPixel(Math.max(sel.a, sel.b), labels.length);
         if (a === b) { box.textContent = defaultText; return; }
         const slice = values.slice(a, b + 1);
         const lo = Math.min(...slice), hi = Math.max(...slice);
@@ -312,8 +331,7 @@
         const sign = change >= 0 ? '+' : '';
         let changeText = sign + fmt(change);
         if (unitLabel === '$') {
-          const pct = (change / values[a]) * 100;
-          changeText += ' (' + sign + pct.toFixed(1) + '%)';
+          changeText += ' (' + sign + ((change / values[a]) * 100).toFixed(1) + '%)';
         }
         box.innerHTML =
           '<b>' + labels[a] + '</b> to <b>' + labels[b] + '</b> (' + (b - a) + ' data points)<br>' +
@@ -322,9 +340,9 @@
         clearBtn.style.display = 'inline-block';
       }
 
-      function down(e) { dragging = true; startIdx = indexFromEvent(e); endIdx = startIdx; chart.draw(); }
-      function move(e) { if (!dragging) return; endIdx = indexFromEvent(e); chart.draw(); describe(); }
-      function up() { dragging = false; describe(); }
+      function down(e) { sel.dragging = true; sel.a = pixelFromEvent(e); sel.b = sel.a; chart.draw(); }
+      function move(e) { if (!sel.dragging) return; sel.b = pixelFromEvent(e); chart.draw(); describe(); }
+      function up() { if (!sel.dragging) return; sel.dragging = false; describe(); }
 
       canvas.addEventListener('mousedown', down);
       canvas.addEventListener('mousemove', move);
@@ -332,9 +350,11 @@
       canvas.addEventListener('touchstart', e => { e.preventDefault(); down(e); }, { passive: false });
       canvas.addEventListener('touchmove', e => { e.preventDefault(); move(e); }, { passive: false });
       canvas.addEventListener('touchend', up);
-      clearBtn.addEventListener('click', () => { startIdx = endIdx = null; chart.draw(); describe(); });
-    }
 
+      function clear() { sel.a = sel.b = null; chart.draw(); describe(); }
+      clearBtn.addEventListener('click', clear);
+      return { clear };
+    }
     // ---------- Load market data ----------
     fetch('data.json?t=' + Date.now())
       .then(r => r.json())
@@ -383,12 +403,15 @@
             scales: { x: { ticks: { maxTicksLimit: 5 } }, y: { ticks: { callback: v => '$' + v.toLocaleString() } } }
           }
         });
-        enableSelection(btcChart, 'btc-selection', 'btc-clear', btcLabels, btcValues,
+                enableSelection(btcChart, 'btc-selection', 'btc-clear', () => btcLabels, () => btcValues,
           v => '$' + Math.round(v).toLocaleString(), '$');
 
         // Yield curve chart
-        const curveLabels = d.yield_curve.history.map(p => p[0]);
-        const curveValues = d.yield_curve.history.map(p => p[1]);
+                // Yield curve chart (full history with range buttons)
+        const fullCurve = d.yield_curve.history;           // [date, value] oldest first
+        let curveLabels = fullCurve.map(p => p[0]);
+        let curveValues = fullCurve.map(p => p[1]);
+
         const curveChart = new Chart(document.getElementById('curve-chart'), {
           type: 'line',
           data: {
@@ -398,10 +421,10 @@
                 label: '10Y minus 2Y spread',
                 data: curveValues,
                 borderColor: '#5ac8fa',
-                borderWidth: 1.5,
+                borderWidth: 1.2,
                 pointRadius: 0,
-                pointHoverRadius: 5,
-                tension: 0.1,
+                pointHoverRadius: 4,
+                tension: 0,
                 fill: { target: 'origin', above: 'rgba(76, 217, 100, 0.10)', below: 'rgba(255, 107, 107, 0.35)' }
               },
               {
@@ -417,6 +440,7 @@
             ]
           },
           options: {
+            animation: false,
             interaction: { mode: 'index', intersect: false },
             plugins: {
               legend: { display: false },
@@ -425,11 +449,38 @@
                 callbacks: { label: ctx => ctx.parsed.y.toFixed(2) + '%' + (ctx.parsed.y < 0 ? ' (inverted)' : '') }
               }
             },
-            scales: { x: { ticks: { maxTicksLimit: 6 } }, y: { ticks: { callback: v => v + '%' } } }
+            scales: { x: { ticks: { maxTicksLimit: 7 } }, y: { ticks: { callback: v => v + '%' } } }
           }
         });
-        enableSelection(curveChart, 'curve-selection', 'curve-clear', curveLabels, curveValues,
-          v => v.toFixed(2) + '%', '%');
+
+        const curveSel = enableSelection(
+          curveChart, 'curve-selection', 'curve-clear',
+          () => curveLabels, () => curveValues,
+          v => v.toFixed(2) + '%', '%'
+        );
+
+        // Range buttons: 1Y, 5Y, 10Y, 25Y, Max
+        document.querySelectorAll('#curve-ranges .range-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.querySelectorAll('#curve-ranges .range-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const years = parseInt(btn.dataset.years, 10);
+            let slice = fullCurve;
+            if (years > 0) {
+              const cutoff = new Date();
+              cutoff.setFullYear(cutoff.getFullYear() - years);
+              const cutoffStr = cutoff.toISOString().slice(0, 10);
+              slice = fullCurve.filter(p => p[0] >= cutoffStr);
+            }
+            curveLabels = slice.map(p => p[0]);
+            curveValues = slice.map(p => p[1]);
+            curveChart.data.labels = curveLabels;
+            curveChart.data.datasets[0].data = curveValues;
+            curveChart.data.datasets[1].data = curveLabels.map(() => 0);
+            curveSel.clear();
+            curveChart.update();
+          });
+        });
       })
       .catch(e => {
         document.getElementById('summary').textContent = 'Market data is not available right now. It refreshes automatically every hour.';
