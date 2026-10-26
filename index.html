@@ -38,6 +38,11 @@
       <div class="big" id="curve-value">...</div>
       <div id="curve-status"></div>
       <canvas id="curve-chart"></canvas>
+       <div id="curve-explainer" style="margin-top: 16px; padding-top: 14px; border-top: 1px solid #2a3340; font-size: 0.92rem; line-height: 1.5; color: #b8c0cc;">
+        <div id="explainer-headline" style="font-weight: 700; font-size: 1rem; margin-bottom: 6px;"></div>
+        <p id="explainer-body" style="margin: 0 0 8px;"></p>
+        <p style="margin: 0; color: #8b95a5; font-size: 0.82rem;">Historically, inversions have come before most US recessions, usually 6 to 24 months ahead, but the timing is unreliable and it is not a guarantee.</p>
+      </div>
     </div>
   </div>
 
@@ -68,6 +73,18 @@
         else { st.textContent = 'Normal (positive slope)'; st.className = 'normal'; }
 
         document.getElementById('summary').textContent = d.summary;
+                const head = document.getElementById('explainer-headline');
+        const body = document.getElementById('explainer-body');
+        const abs = Math.abs(spread).toFixed(2);
+        if (spread < 0) {
+          head.textContent = 'Inverted by ' + abs + ' percentage points';
+          head.style.color = '#ff6b6b';
+          body.textContent = 'The 2-year Treasury yield is currently higher than the 10-year yield. Normally you are paid more for lending for longer, so when short rates beat long rates, the bond market is signalling that it expects growth to weaken and the Fed to cut rates in future. The deeper the dip below zero, the stronger the signal.';
+        } else {
+          head.textContent = 'Normal: 10-year is ' + abs + ' percentage points above the 2-year';
+          head.style.color = '#4cd964';
+          body.textContent = 'The 10-year Treasury yield is above the 2-year yield, which is the usual upward-sloping shape. It means lenders are being paid more for tying money up longer, and the bond market is not flashing its classic recession warning right now. Note that recessions have often started after the curve un-inverts, so a return to positive is not automatically all clear.';
+        }
         document.getElementById('updated').textContent = new Date(d.updated).toLocaleString();
 
         new Chart(document.getElementById('btc-chart'), {
