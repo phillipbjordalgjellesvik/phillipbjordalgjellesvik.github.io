@@ -31,17 +31,16 @@ fred_resp = requests.get(
         "series_id": "T10Y2Y",
         "api_key": FRED_KEY,
         "file_type": "json",
-        "sort_order": "desc",
-        "limit": 1300,
+        "sort_order": "asc",
+        "observation_start": "1976-01-01",
     },
-    timeout=30,
+    timeout=60,
 ).json()
 obs = [
     [o["date"], float(o["value"])]
     for o in fred_resp["observations"]
     if o["value"] != "."
 ]
-obs.reverse()  # oldest first
 curve_latest = obs[-1][1]
 
 # ---- Simple automatic summary (no AI key required) ----
