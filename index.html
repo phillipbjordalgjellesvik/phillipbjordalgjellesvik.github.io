@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Phillip's Page</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: -apple-system, Segoe UI, Roboto, sans-serif; background: #0f1419; color: #e6e9ef; margin: 0; padding: 0; }
+    header { padding: 40px 20px 10px; text-align: center; }
+    h1 { margin: 0 0 8px; }
+    .sub { color: #8b95a5; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; max-width: 1000px; margin: 30px auto; padding: 0 20px; }
+    .card { background: #1a2029; border-radius: 12px; padding: 20px; }
+    .big { font-size: 2.2rem; font-weight: 700; margin: 6px 0; }
+    .label { color: #8b95a5; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .inverted { color: #ff6b6b; }
+    .normal { color: #4cd964; }
+    footer { text-align: center; color: #8b95a5; font-size: 0.85rem; padding: 20px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Hi, I'm Phillip</h1>
+    <div class="sub">Tracking Bitcoin and the yield curve</div>
+  </header>
+
+  <div class="grid">
+    <div class="card">
+      <div class="label">Bitcoin (USD)</div>
+      <div class="big" id="btc-price">...</div>
+      <div id="btc-change"></div>
+      <canvas id="btc-chart"></canvas>
+    </div>
+
+    <div class="card">
+      <div class="label">10Y minus 2Y Treasury spread</div>
+      <div class="big" id="curve-value">...</div>
+      <div id="curve-status"></div>
+      <canvas id="curve-chart"></canvas>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card" style="grid-column: 1 / -1;">
+      <div class="label">Summary</div>
+      <p id="summary">Loading...</p>
+    </div>
+  </div>
+
+  <footer>Last updated: <span id="updated">...</span></footer>
+
+  <script>
+    fetch('data.json?t=' + Date.now())
+      .then(r => r.json())
+      .then(d => {
+        document.getElementById('btc-price').textContent =
+          '$' + d.bitcoin.price.toLocaleString(undefined, {maximumFractionDigits: 0});
+        const ch = d.bitcoin.change_24h;
+        const chEl = document.getElementById('btc-change');
+        chEl.textContent = (ch >= 0 ? '+' : '') + ch.toFixed(2) + '% in 24h';
+        chEl.className = ch >= 0 ? 'normal' : 'inverted';
+
+        const spread = d.yield_curve.latest;
+        document.getElementById('curve-value').textContent = spread.toFixed(2) + '%';
+        const st = document.getElementById('curve-status');
+        if (spread < 0) { st.textContent = 'INVERTED'; st.className = 'inverted'; }
+        else { st.textContent = 'Normal (positive slope)'; st.className = 'normal'; }
+
+        document.getElementById('summary').textContent = d.summary;
+        document.getElementById('updated').textContent = new Date(d.updated).toLocaleString();
+
+        new Chart(document.getElementById('btc-chart'), {
+          type: 'line',
+          data: { labels: d.bitcoin.history.map(p => p[0]),
+                  datasets: [{ data: d.bitcoin.history.map(p => p[1]), borderColor: '#f7931a', pointRadius: 0, tension: 0.2 }] },
+          options: { plugins: { legend: { display: false } }, scales: { x: { ticks: { maxTicksLimit: 5 } } } }
+        });
+
+        new Chart(document.getElementById('curve-chart'), {
+          type: 'line',
+          data: { labels: d.yield_curve.history.map(p => p[0]),
+                  datasets: [{ data: d.yield_curve.history.map(p => p[1]), borderColor: '#5ac8fa', pointRadius: 0, tension: 0.2 }] },
+          options: { plugins: { legend: { display: false } }, scales: { x: { ticks: { maxTicksLimit: 5 } } } }
+        });
+      })
+      .catch(e => { document.getElementById('summary').textContent = 'Data not available yet. Run the update workflow once (see Step 5).'; });
+  </script>
+</body>
+</html>
