@@ -298,6 +298,24 @@
       color: #0b1016;
       font-weight: 600;
     }
+        /* Role line: grey text, blue outline and glow only on hover */
+    .role {
+      display: inline-block;
+      color: var(--text);
+      border: 1.5px solid transparent;
+      border-radius: 999px;
+      padding: 7px 18px;
+      margin-left: -18px;
+      font-size: 1rem;
+      background: transparent;
+      cursor: default;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+    .role:hover {
+      border-color: var(--accent);
+      background: rgba(41, 151, 255, 0.08);
+      box-shadow: 0 0 18px rgba(41, 151, 255, 0.45);
+    }
   </style>
 </head>
 <body>
