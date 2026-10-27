@@ -339,13 +339,39 @@
         clearBtn.style.display = 'inline-block';
       }
 
-      function down(e) { sel.dragging = true; sel.a = pixelFromEvent(e); sel.b = sel.a; chart.update('none'); }
-      function move(e) { if (!sel.dragging) return; sel.b = pixelFromEvent(e); chart.draw('none'); describe(); }
-            function up() {
+           let startPx = null;      // where the press started
+      let hadSelection = false; // was something already marked when the press began?
+
+      function down(e) {
+        startPx = pixelFromEvent(e);
+        hadSelection = (sel.a !== null && sel.b !== null);
+        sel.dragging = true;
+        // Do NOT start a new selection yet. Wait until the pointer actually moves.
+        if (hadSelection) {
+          sel.a = sel.b = null;     // a press clears the old highlight straight away
+          chart.update('none');
+          describe();
+        }
+      }
+
+      function move(e) {
+        if (!sel.dragging) return;
+        const px = pixelFromEvent(e);
+        // Only begin marking once the pointer has moved more than 8 pixels
+        if (sel.a === null) {
+          if (Math.abs(px - startPx) < 8) return;
+          sel.a = startPx;
+        }
+        sel.b = px;
+        chart.update('none');
+        describe();
+      }
+
+      function up() {
         if (!sel.dragging) return;
         sel.dragging = false;
-        // A selection narrower than 12 pixels is an accidental click, so remove it
-        if (sel.a === null || sel.b === null || Math.abs(sel.b - sel.a) < 20) {
+        // Too narrow to be a real selection, so remove it
+        if (sel.a !== null && sel.b !== null && Math.abs(sel.b - sel.a) < 12) {
           sel.a = sel.b = null;
           chart.update('none');
         }
@@ -361,22 +387,7 @@
 
       function clear() { sel.a = sel.b = null; chart.update('none'); describe(); }
       clearBtn.addEventListener('click', clear);
-            canvas.addEventListener('dblclick', () => {
-        clear();
-        setTimeout(clear, 60);
-      });
-               // Double-tap on touch screens clears the selection
-      let lastTap = 0;
-      canvas.addEventListener('touchend', () => {
-        const now = Date.now();
-        if (now - lastTap < 350) {
-          clear();
-          setTimeout(clear, 60);
-          lastTap = 0;
-        } else {
-          lastTap = now;
-        }
-      });
+            
       return { clear };
     }
     // ---------- Load market data ----------
