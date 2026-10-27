@@ -200,6 +200,49 @@
       object-fit: cover;
       object-position: center top;
     }
+        /* Why no recession yet box */
+    .why-box {
+      margin-top: 22px;
+      padding: 22px 24px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.03);
+    }
+    .why-box h3 {
+      margin: 0 0 8px;
+      font-size: 1.25rem;
+    }
+    .why-intro {
+      margin: 0 0 18px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+    .why-item {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      padding: 12px 0;
+      border-top: 1px solid var(--line);
+      line-height: 1.55;
+    }
+    .why-num {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #0b1016;
+      font-weight: 700;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .why-fine {
+      margin: 14px 0 0;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
   </style>
 </head>
 <body>
@@ -349,10 +392,51 @@
           <div id="curve-selection" class="selection-box">Click and drag across the chart to mark a period.</div>
           <button class="clear-btn" id="curve-clear">Clear selection</button>
                     <button class="clear-btn" id="curve-reset" style="display:none">Reset zoom</button>
-          <div class="explainer">
-            <div class="head" id="explainer-headline"></div>
-            <p id="explainer-body"></p>
-            <p class="fine">Historically, inversions have come before most US recessions, usually 6 to 24 months ahead, but the timing is unreliable and it is not a guarantee.</p>
+                   <div class="why-box">
+            <h3>Why hasn't a recession come yet?</h3>
+            <p class="why-intro">The yield curve inverted in 2022 and stayed inverted for a long time, yet the US has not had a clear recession. Economists point to several possible reasons. Most likely it is a mix of them.</p>
+
+            <div class="why-item">
+              <div class="why-num">1</div>
+              <div><strong>The delay is just longer this time.</strong> Historically a recession arrives about 6 to 24 months after an inversion, but the gap varies a lot. In 2006 it took roughly 18 months. A longer lag does not mean the signal was wrong, only that it could still be early.</div>
+            </div>
+
+            <div class="why-item">
+              <div class="why-num">2</div>
+              <div><strong>Households and companies had a big cushion.</strong> After the pandemic, people held extra savings, and many companies and homeowners had locked in cheap long-term loans. Higher interest rates therefore hurt much more slowly than usual.</div>
+            </div>
+
+            <div class="why-item">
+              <div class="why-num">3</div>
+              <div><strong>The job market stayed strong.</strong> As long as most people keep their jobs and keep spending, a recession is hard to start. Consumer spending is the biggest part of the US economy.</div>
+            </div>
+
+            <div class="why-item">
+              <div class="why-num">4</div>
+              <div><strong>Government spending kept the economy moving.</strong> Large government budget deficits put a lot of money into the economy, which worked against the slowdown that high rates normally cause.</div>
+            </div>
+
+            <div class="why-item">
+              <div class="why-num">5</div>
+              <div><strong>The curve may have been distorted.</strong> Years of central banks buying bonds, plus heavy demand for safe long-term Treasuries from pension funds and foreign buyers, held long-term yields down. That can make the curve invert more than the real recession risk would justify.</div>
+            </div>
+
+            <div class="why-item">
+              <div class="why-num">6</div>
+              <div><strong>The Fed may have pulled off a soft landing.</strong> The Federal Reserve raised rates fast to fight inflation, and inflation came down without a big jump in unemployment. That is rare, but it is possible.</div>
+            </div>
+
+            <div class="why-item">
+              <div class="why-num">7</div>
+              <div><strong>The neutral interest rate may be higher now.</strong> If the "normal" level of interest rates is higher than before, then today's rates are less restrictive than they look, so they slow the economy less.</div>
+            </div>
+
+            <div class="why-item">
+              <div class="why-num">8</div>
+              <div><strong>The recession signal may still be coming.</strong> The curve has now steepened back to positive. In past cycles, recessions often began after the curve un-inverted, not while it was inverted. So the story may not be over.</div>
+            </div>
+
+            <p class="why-fine">This is a summary of common explanations, not a forecast and not financial advice. Nobody knows for certain which reasons matter most.</p>
           </div>
         </div>
       </div>
@@ -527,19 +611,7 @@
         document.getElementById('summary').textContent = d.summary;
         document.getElementById('updated').textContent = new Date(d.updated).toLocaleString();
 
-        // Explainer
-        const head = document.getElementById('explainer-headline');
-        const body = document.getElementById('explainer-body');
-        const abs = Math.abs(spread).toFixed(2);
-        if (spread < 0) {
-          head.textContent = 'Inverted by ' + abs + ' percentage points';
-          head.style.color = '#ff6b6b';
-          body.textContent = 'The 2-year Treasury yield is currently higher than the 10-year yield. Normally you are paid more for lending for longer, so when short rates beat long rates, the bond market is signalling that it expects growth to weaken and the Fed to cut rates in future. The deeper the dip below zero, the stronger the signal.';
-        } else {
-          head.textContent = 'Normal: 10-year is ' + abs + ' percentage points above the 2-year';
-          head.style.color = '#4cd964';
-          body.textContent = 'The 10-year Treasury yield is above the 2-year yield, which is the usual upward-sloping shape. It means lenders are being paid more for tying money up longer, and the bond market is not flashing its classic recession warning right now. Note that recessions have often started after the curve un-inverts, so a return to positive is not automatically all clear.';
-        }
+       
 
         // Bitcoin chart
         const btcLabels = d.bitcoin.history.map(p => p[0]);
