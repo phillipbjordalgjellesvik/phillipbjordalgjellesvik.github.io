@@ -316,6 +316,21 @@
       background: rgba(41, 151, 255, 0.08);
       box-shadow: 0 0 18px rgba(41, 151, 255, 0.45);
     }
+        /* Home page: both buttons plain, blue outline and glow only on hover */
+    .home-btn,
+    .home-btn.primary {
+      background: transparent;
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-weight: 400;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+    .home-btn:hover,
+    .home-btn.primary:hover {
+      border-color: var(--accent);
+      background: rgba(41, 151, 255, 0.08);
+      box-shadow: 0 0 18px rgba(41, 151, 255, 0.45);
+    }
   </style>
 </head>
 <body>
