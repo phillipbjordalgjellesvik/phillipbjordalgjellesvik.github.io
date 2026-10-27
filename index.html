@@ -234,6 +234,8 @@
           <canvas id="curve-chart"></canvas>
           <div id="curve-selection" class="selection-box">Click and drag across the chart to mark a period.</div>
           <button class="clear-btn" id="curve-clear">Clear selection</button>
+                    <button class="clear-btn" id="curve-zoom">Zoom to selection</button>
+          <button class="clear-btn" id="curve-reset">Reset zoom</button>
           <div class="explainer">
             <div class="head" id="explainer-headline"></div>
             <p id="explainer-body"></p>
@@ -319,7 +321,7 @@
 
       function describe() {
         const labels = getLabels(), values = getValues();
-        if (sel.a === null || sel.b === null) { box.textContent = defaultText; clearBtn.style.display = 'none'; return; }
+        if (sel.a === null || sel.b === null) { box.textContent = defaultText; clearBtn.style.display = 'none'; if (zoomBtn.style.display = 'none'; return; }
         let a = indexFromPixel(Math.min(sel.a, sel.b), labels.length);
         let b = indexFromPixel(Math.max(sel.a, sel.b), labels.length);
         if (a === b) { box.textContent = defaultText; return; }
@@ -388,7 +390,14 @@
       function clear() { sel.a = sel.b = null; chart.update('none'); describe(); }
       clearBtn.addEventListener('click', clear);
             
-      return { clear };
+            function getRange() {
+        if (sel.a === null || sel.b === null) return null;
+        const n = getLabels().length;
+        const a = indexFromPixel(Math.min(sel.a, sel.b), n);
+        const b = indexFromPixel(Math.max(sel.a, sel.b), n);
+        return (b > a) ? { a, b } : null;
+      }
+      return { clear, getRange };
     }
     // ---------- Load market data ----------
     fetch('data.json?t=' + Date.now())
@@ -494,7 +503,21 @@
           v => v.toFixed(2) + '%', '%'
         );
 
-        // Range buttons: 1Y, 5Y, 10Y, 25Y, Max
+             // Range buttons plus zoom
+        let currentSlice = fullCurve;          // the data for the active range button
+        const zoomBtn2 = document.getElementById('curve-zoom');
+        const resetBtn = document.getElementById('curve-reset');
+
+        function applyData(slice) {
+          curveLabels = slice.map(p => p[0]);
+          curveValues = slice.map(p => p[1]);
+          curveChart.data.labels = curveLabels;
+          curveChart.data.datasets[0].data = curveValues;
+          curveChart.data.datasets[1].data = curveLabels.map(() => 0);
+          curveSel.clear();
+          curveChart.update();
+        }
+
         document.querySelectorAll('#curve-ranges .range-btn').forEach(btn => {
           btn.addEventListener('click', () => {
             document.querySelectorAll('#curve-ranges .range-btn').forEach(b => b.classList.remove('active'));
@@ -507,14 +530,24 @@
               const cutoffStr = cutoff.toISOString().slice(0, 10);
               slice = fullCurve.filter(p => p[0] >= cutoffStr);
             }
-            curveLabels = slice.map(p => p[0]);
-            curveValues = slice.map(p => p[1]);
-            curveChart.data.labels = curveLabels;
-            curveChart.data.datasets[0].data = curveValues;
-            curveChart.data.datasets[1].data = curveLabels.map(() => 0);
-            curveSel.clear();
-            curveChart.update();
+            currentSlice = slice;
+            resetBtn.style.display = 'none';
+            applyData(slice);
           });
+        });
+
+        zoomBtn2.addEventListener('click', () => {
+          const r = curveSel.getRange();
+          if (!r) return;
+          const zoomed = currentSlice.slice(r.a, r.b + 1);
+          applyData(zoomed);
+          resetBtn.style.display = 'inline-block';
+        });
+
+        resetBtn.addEventListener('click', () => {
+          applyData(currentSlice);
+          resetBtn.style.display = 'none';
+        });
         });
       })
       .catch(e => {
