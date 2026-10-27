@@ -377,6 +377,115 @@
       .banner-img.tall { height: 130px; }
       .follow-banner .dash-intro { padding: 36px 20px 32px; }
     }
+        /* ---------- Responsive layout: wide on PC, slim on phone ---------- */
+
+    /* Page width grows with the screen */
+    main {
+      max-width: 1200px;
+      padding-left: 32px;
+      padding-right: 32px;
+    }
+    .nav-inner {
+      max-width: 1200px;
+      padding-left: 32px;
+      padding-right: 32px;
+    }
+    footer {
+      max-width: 1200px;
+    }
+
+    /* Charts side by side on PC, taller */
+    #page-follow .grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 28px;
+    }
+    #page-follow .card canvas {
+      min-height: 340px;
+    }
+
+    /* Text uses the width instead of running down a narrow column */
+    .dash-intro p,
+    .home-sub,
+    .hero-text .pitch {
+      max-width: 860px;
+    }
+    .why-box {
+      columns: 2;
+      column-gap: 40px;
+    }
+    .why-box h3,
+    .why-box .why-intro,
+    .why-box .why-fine {
+      column-span: all;
+    }
+    .why-item {
+      break-inside: avoid;
+    }
+
+    /* About me: education and work experience in two columns on PC */
+    .entry-cols {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: 28px;
+    }
+    #page-about {
+      display: none;
+    }
+    #page-about.active {
+      display: block;
+    }
+
+    /* Banner pictures taller on PC */
+    .banner-img { height: 260px; }
+    .banner-img.tall { height: 220px; }
+    .follow-banner .dash-intro { padding: 72px 36px 64px; }
+    .home-hero { min-height: 70vh; padding-left: 48px; padding-right: 48px; }
+
+    /* Very big monitors */
+    @media (min-width: 1500px) {
+      main, .nav-inner, footer { max-width: 1360px; }
+      #page-follow .card canvas { min-height: 400px; }
+      .banner-img { height: 300px; }
+      .banner-img.tall { height: 260px; }
+    }
+
+    /* Tablet: one column, slimmer */
+    @media (max-width: 900px) {
+      main, .nav-inner {
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+      #page-follow .grid {
+        grid-template-columns: 1fr;
+      }
+      .why-box {
+        columns: 1;
+      }
+      .entry-cols {
+        grid-template-columns: 1fr;
+      }
+      .banner-img { height: 190px; }
+      .banner-img.tall { height: 160px; }
+      .follow-banner .dash-intro { padding: 48px 24px 40px; }
+      .home-hero { min-height: 56vh; padding-left: 28px; padding-right: 28px; }
+    }
+
+    /* Phone: slim and tidy */
+    @media (max-width: 600px) {
+      main, .nav-inner {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+      #page-follow .card canvas {
+        min-height: 260px;
+      }
+      .card { padding: 20px; }
+      .banner-img { height: 140px; }
+      .banner-img.tall { height: 120px; }
+      .follow-banner .dash-intro { padding: 32px 18px 28px; }
+      .home-hero { min-height: 48vh; padding: 36px 20px; }
+      .home-btn { padding: 11px 22px; }
+    }
   </style>
 </head>
 <body>
@@ -426,7 +535,8 @@
           <div class="contact">Get in touch: <a href="mailto:Phillipbjordal@gmail.com">Phillipbjordal@gmail.com</a></div>
         </div>
       </div>
-
+      <div class="entry-cols">
+      <div>
       <h2 class="section-title">Education</h2>
       <div class="entry">
         <div>
@@ -442,7 +552,8 @@
         </div>
         <div class="when">2019 to 2022</div>
       </div>
-
+      </div>
+      <div>
       <h2 class="section-title">Work experience</h2>
       <div class="entry">
         <div>
@@ -474,7 +585,8 @@
         </div>
         <div class="when">April to June 2022</div>
       </div>
-
+      </div>
+      </div>
       <div class="two-col">
         <div>
           <h2 class="section-title">Achievements</h2>
