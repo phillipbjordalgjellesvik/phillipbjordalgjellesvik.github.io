@@ -544,7 +544,7 @@
 
         // Yield curve chart
                 // Yield curve chart (full history with range buttons)
-        const fullCurve = d.yield_curve.history;           // [date, value] oldest first
+        var fullCurve = d.yield_curve.history;           // [date, value] oldest first
         let curveLabels = fullCurve.map(p => p[0]);
         let curveValues = fullCurve.map(p => p[1]);
 
