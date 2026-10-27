@@ -535,7 +535,7 @@
           data: { labels: btcLabels, datasets: [{ data: btcValues, borderColor: '#f7931a', borderWidth: 1.5, pointRadius: 0, pointHoverRadius: 4, tension: 0.2 }] },
           options: {
             interaction: { mode: 'index', intersect: false },
-            plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => '$' + Math.round(ctx.parsed.y).toLocaleString() } } },
+            plugins: { legend: { display: false }, tooltip: { enabled: false } },
             scales: { x: { ticks: { maxTicksLimit: 5 } }, y: { ticks: { callback: v => '$' + v.toLocaleString() } } }
           }
         });
@@ -590,6 +590,7 @@
                 limits: { x: { minRange: 10 } }
               },
               tooltip: {
+                enabled: false,
                 filter: item => item.datasetIndex === 0,
                 callbacks: { label: ctx => ctx.parsed.y.toFixed(2) + '%' + (ctx.parsed.y < 0 ? ' (inverted)' : '') }
               }
