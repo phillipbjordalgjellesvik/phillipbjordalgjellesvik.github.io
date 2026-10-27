@@ -630,13 +630,14 @@
       .catch(e => {
         document.getElementById('summary').textContent = 'Market data is not available right now. It refreshes automatically every hour.';
       });
-        // ===== Highlight then double-click to zoom (yield curve) =====
+    // ===== Highlight, then scroll to zoom (yield curve, PC) =====
     (function () {
       const canvas = document.getElementById('curve-chart');
       const resetBtn = document.getElementById('curve-reset');
       if (!canvas || !resetBtn) return;
 
-      let zoomStack = [];   // earlier views, so Reset can step back one at a time
+      let zoomStack = [];      // earlier views, so scrolling down or Reset steps back
+      let lastWheel = 0;       // stops one flick of the wheel from zooming several times
 
       function getChart() {
         return (typeof curveChart !== 'undefined') ? curveChart : null;
@@ -659,47 +660,65 @@
         if (clearBtn) clearBtn.click();
       }
 
-      canvas.addEventListener('dblclick', e => {
+      function hasSelection(c) {
+        const s = c && c.$selection;
+        return !!(s && s.a !== null && s.b !== null && Math.abs(s.b - s.a) > 6);
+      }
+
+      function zoomIn() {
         const c = getChart();
-        if (!c || !c.$selection) return;
         const s = c.$selection;
-        if (s.a === null || s.b === null) return;
-
-        // Was the double-click inside the blue box?
-        const rect = canvas.getBoundingClientRect();
-        const x = (e.clientX - rect.left) * (c.width / rect.width);
         const left = Math.min(s.a, s.b), right = Math.max(s.a, s.b);
-        if (x < left - 6 || x > right + 6) return;
-
         const labels = c.data.labels;
         const n = labels.length;
         const ia = Math.max(0, Math.min(n - 1, Math.round(c.scales.x.getValueForPixel(left))));
         const ib = Math.max(0, Math.min(n - 1, Math.round(c.scales.x.getValueForPixel(right))));
         if (ib - ia < 3) return;
-
         const rows = rowsBetween(labels[ia], labels[ib]);
         if (!rows) return;
-
         zoomStack.push({ labels: labels.slice(), values: c.data.datasets[0].data.slice() });
         showView(rows.map(p => p[0]), rows.map(p => p[1]));
         resetBtn.style.display = 'inline-block';
-      });
+      }
+
+      function zoomOut() {
+        const prev = zoomStack.pop();
+        if (!prev) return false;
+        showView(prev.labels, prev.values);
+        if (zoomStack.length === 0) resetBtn.style.display = 'none';
+        return true;
+      }
+
+      canvas.addEventListener('wheel', e => {
+        const c = getChart();
+        if (!c) return;
+        const now = Date.now();
+
+        if (e.deltaY < 0 && hasSelection(c)) {
+          // scroll up with a highlight: zoom into it
+          e.preventDefault();
+          if (now - lastWheel < 300) return;
+          lastWheel = now;
+          zoomIn();
+        } else if (e.deltaY > 0 && zoomStack.length > 0) {
+          // scroll down while zoomed: step back out
+          e.preventDefault();
+          if (now - lastWheel < 300) return;
+          lastWheel = now;
+          zoomOut();
+        }
+        // otherwise do nothing, so the page scrolls normally
+      }, { passive: false });
 
       resetBtn.addEventListener('click', () => {
         const c = getChart();
-        const prev = zoomStack.pop();
-        if (prev) {
-          showView(prev.labels, prev.values);
-        } else if (c && c.resetZoom) {
-          c.resetZoom();   // undoes a phone pinch zoom
-        }
-        if (zoomStack.length === 0) {
-          // keep the button only while a pinch zoom might be active
-          if (!c || !c.isZoomedOrPanned || !c.isZoomedOrPanned()) resetBtn.style.display = 'none';
+        if (!zoomOut() && c && c.resetZoom) c.resetZoom();   // also undoes a phone pinch
+        if (zoomStack.length === 0 && !(c && c.isZoomedOrPanned && c.isZoomedOrPanned())) {
+          resetBtn.style.display = 'none';
         }
       });
 
-      // Show Reset zoom after a pinch, too
+      // Show Reset zoom after a phone pinch, too
       canvas.addEventListener('touchend', () => {
         const c = getChart();
         if (c && c.isZoomedOrPanned && c.isZoomedOrPanned()) {
