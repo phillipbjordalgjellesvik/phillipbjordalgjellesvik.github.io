@@ -597,7 +597,8 @@
             scales: { x: { ticks: { maxTicksLimit: 7 } }, y: { ticks: { callback: v => v + '%' } } }
           }
         });
-
+        window.curveChart = curveChart;
+        window.fullCurve = fullCurve;
         const curveSel = enableSelection(
           curveChart, 'curve-selection', 'curve-clear',
           () => curveLabels, () => curveValues,
