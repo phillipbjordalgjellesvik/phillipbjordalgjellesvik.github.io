@@ -272,6 +272,26 @@
     }
     tabs.forEach(t => t.addEventListener('click', () => showPage(t.dataset.page)));
     if (location.hash === '#follow') showPage('follow');
+    // Global plugin: draws the highlighted period on any chart that has a selection
+    Chart.register({
+      id: 'periodHighlight',
+      afterDatasetsDraw(chart) {
+        const s = chart.$selection;
+        if (!s || s.a === null || s.b === null) return;
+        const area = chart.chartArea;
+        const left = Math.max(area.left, Math.min(s.a, s.b));
+        const right = Math.min(area.right, Math.max(s.a, s.b));
+        const width = Math.max(right - left, 2);
+        const ctx = chart.ctx;
+        ctx.save();
+        ctx.fillStyle = 'rgba(90, 200, 250, 0.28)';
+        ctx.fillRect(left, area.top, width, area.bottom - area.top);
+        ctx.strokeStyle = 'rgba(90, 200, 250, 1)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(left, area.top, width, area.bottom - area.top);
+        ctx.restore();
+      }
+    });
 
     // ---------- Drag-to-mark helper: shades a period and describes it ----------
        function enableSelection(chart, boxId, clearId, getLabels, getValues, fmt, unitLabel) {
@@ -279,39 +299,18 @@
       const box = document.getElementById(boxId);
       const clearBtn = document.getElementById(clearId);
       const defaultText = 'Click and drag across the chart to mark a period.';
-      const sel = { a: null, b: null, dragging: false };
+            const sel = { a: null, b: null, dragging: false };
+      chart.$selection = sel;
 
-      // Plugin that draws a clearly visible highlight box in pixel space
-      const boxPlugin = {
-        id: 'markBox_' + boxId,
-        afterDraw(c) {
-          if (sel.a === null || sel.b === null) return;
-          const area = c.chartArea;
-          const left = Math.max(area.left, Math.min(sel.a, sel.b));
-          const right = Math.min(area.right, Math.max(sel.a, sel.b));
-          const w = Math.max(right - left, 2);
-          const ctx = c.ctx;
-          ctx.save();
-          ctx.fillStyle = 'rgba(90, 200, 250, 0.22)';
-          ctx.fillRect(left, area.top, w, area.bottom - area.top);
-          ctx.strokeStyle = 'rgba(90, 200, 250, 0.95)';
-          ctx.lineWidth = 2;
-          ctx.strokeRect(left, area.top, w, area.bottom - area.top);
-          ctx.restore();
-        }
-      };
-      chart.config.plugins = (chart.config.plugins || []).concat(boxPlugin);
-      chart.update();
+      
 
-      function pixelFromEvent(e) {
+           function pixelFromEvent(e) {
         const rect = canvas.getBoundingClientRect();
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        // account for any CSS scaling of the canvas
-        const scale = canvas.width / rect.width / (window.devicePixelRatio || 1);
-        const x = (clientX - rect.left) * scale;
+        // Chart.js works in CSS pixels, so no extra scaling is needed
+        const x = (clientX - rect.left) * (chart.width / rect.width);
         return Math.max(chart.chartArea.left, Math.min(chart.chartArea.right, x));
       }
-
       function indexFromPixel(px, n) {
         const xs = chart.scales.x;
         const idx = Math.round(xs.getValueForPixel(px));
@@ -340,8 +339,8 @@
         clearBtn.style.display = 'inline-block';
       }
 
-      function down(e) { sel.dragging = true; sel.a = pixelFromEvent(e); sel.b = sel.a; chart.draw(); }
-      function move(e) { if (!sel.dragging) return; sel.b = pixelFromEvent(e); chart.draw(); describe(); }
+      function down(e) { sel.dragging = true; sel.a = pixelFromEvent(e); sel.b = sel.a; chart.update('none'); }
+      function move(e) { if (!sel.dragging) return; sel.b = pixelFromEvent(e); chart.draw('none'); describe(); }
       function up() { if (!sel.dragging) return; sel.dragging = false; describe(); }
 
       canvas.addEventListener('mousedown', down);
@@ -351,7 +350,7 @@
       canvas.addEventListener('touchmove', e => { e.preventDefault(); move(e); }, { passive: false });
       canvas.addEventListener('touchend', up);
 
-      function clear() { sel.a = sel.b = null; chart.draw(); describe(); }
+      function clear() { sel.a = sel.b = null; chart.update('none'); describe(); }
       clearBtn.addEventListener('click', clear);
       return { clear };
     }
