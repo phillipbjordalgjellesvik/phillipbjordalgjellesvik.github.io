@@ -6,6 +6,8 @@
   <title>Phillip Bjordal Gjellesvik</title>
   <meta name="description" content="Business student at BI Norwegian Business School with a strong interest in financial markets.">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
   <style>
     :root {
       --bg: #0f1419;
@@ -74,7 +76,7 @@
     .selection-box b { color: var(--text); }
     .clear-btn { margin-top: 8px; background: var(--line); color: var(--text); border: none; border-radius: 6px; padding: 6px 12px; font-size: 0.82rem; cursor: pointer; display: none; font-family: inherit; }
     .clear-btn:hover { background: #364254; }
-    canvas { cursor: crosshair; }
+    canvas { cursor: crosshair; touch-action: pan-ypinch-zoom; }
         .range-row { display: flex; gap: 6px; margin: 10px 0 6px; }
     .range-btn { background: transparent; color: var(--soft); border: 1px solid var(--line); border-radius: 6px; padding: 4px 12px; font-size: 0.82rem; cursor: pointer; font-family: inherit; }
     .range-btn:hover { border-color: var(--accent); color: var(--text); }
@@ -577,6 +579,15 @@
             interaction: { mode: 'index', intersect: false },
             plugins: {
               legend: { display: false },
+                            zoom: {
+                pan: { enabled: true, mode: 'x', modifierKey: 'shift' },
+                zoom: {
+                  wheel: { enabled: false },
+                  pinch: { enabled: true },
+                  mode: 'x'
+                },
+                limits: { x: { minRange: 10 } }
+              },
               tooltip: {
                 filter: item => item.datasetIndex === 0,
                 callbacks: { label: ctx => ctx.parsed.y.toFixed(2) + '%' + (ctx.parsed.y < 0 ? ' (inverted)' : '') }
