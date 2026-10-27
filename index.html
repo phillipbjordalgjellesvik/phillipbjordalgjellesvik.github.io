@@ -352,6 +352,7 @@
 
       function clear() { sel.a = sel.b = null; chart.update('none'); describe(); }
       clearBtn.addEventListener('click', clear);
+      canvas.addEventListener('dblclick', clear);
       return { clear };
     }
     // ---------- Load market data ----------
