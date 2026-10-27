@@ -341,7 +341,16 @@
 
       function down(e) { sel.dragging = true; sel.a = pixelFromEvent(e); sel.b = sel.a; chart.update('none'); }
       function move(e) { if (!sel.dragging) return; sel.b = pixelFromEvent(e); chart.draw('none'); describe(); }
-      function up() { if (!sel.dragging) return; sel.dragging = false; describe(); }
+            function up() {
+        if (!sel.dragging) return;
+        sel.dragging = false;
+        // A selection narrower than 12 pixels is an accidental click, so remove it
+        if (sel.a === null || sel.b === null || Math.abs(sel.b - sel.a) < 20) {
+          sel.a = sel.b = null;
+          chart.update('none');
+        }
+        describe();
+      }
 
       canvas.addEventListener('mousedown', down);
       canvas.addEventListener('mousemove', move);
@@ -352,7 +361,22 @@
 
       function clear() { sel.a = sel.b = null; chart.update('none'); describe(); }
       clearBtn.addEventListener('click', clear);
-      canvas.addEventListener('dblclick', clear);
+            canvas.addEventListener('dblclick', () => {
+        clear();
+        setTimeout(clear, 60);
+      });
+               // Double-tap on touch screens clears the selection
+      let lastTap = 0;
+      canvas.addEventListener('touchend', () => {
+        const now = Date.now();
+        if (now - lastTap < 350) {
+          clear();
+          setTimeout(clear, 60);
+          lastTap = 0;
+        } else {
+          lastTap = now;
+        }
+      });
       return { clear };
     }
     // ---------- Load market data ----------
