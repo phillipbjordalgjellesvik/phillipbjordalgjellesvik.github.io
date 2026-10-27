@@ -595,7 +595,25 @@
                 callbacks: { label: ctx => ctx.parsed.y.toFixed(2) + '%' + (ctx.parsed.y < 0 ? ' (inverted)' : '') }
               }
             },
-            scales: { x: { ticks: { maxTicksLimit: 7 } }, y: { ticks: { callback: v => v + '%' } } }
+                        scales: {
+              x: {
+                ticks: {
+                  maxTicksLimit: 7,
+                  maxRotation: 0,
+                  autoSkip: true,
+                  callback: function (value) {
+                    const label = this.getLabelForValue(value);   // e.g. 2019-08-14
+                    const labels = this.chart.data.labels;
+                    const first = new Date(labels[0]);
+                    const last = new Date(labels[labels.length - 1]);
+                    const years = (last - first) / (1000 * 60 * 60 * 24 * 365);
+                    if (years >= 2) return label.slice(0, 4);       // long view: year only
+                    return label.slice(0, 7);                       // short view: year and month
+                  }
+                }
+              },
+              y: { ticks: { callback: v => v + '%' } }
+            }
           }
         });
         window.curveChart = curveChart;
