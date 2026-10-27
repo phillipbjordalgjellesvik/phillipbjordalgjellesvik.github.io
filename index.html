@@ -1107,6 +1107,67 @@
         })
       );
     })();
+        // ===== Two-finger pinch: never highlight =====
+    (function () {
+      var ids = ['curve-chart', 'btc-chart'];
+      var selIds = { 'curve-chart': 'curve-clear', 'btc-chart': 'btc-clear' };
+
+      ids.forEach(function (id) {
+        var canvas = document.getElementById(id);
+        if (!canvas) return;
+
+        var multi = false; // true while 2 or more fingers are down
+
+        function chartObj() {
+          return (window.Chart && Chart.getChart) ? Chart.getChart(canvas) : null;
+        }
+
+        // Remove any highlight the chart started
+        function wipeSelection() {
+          var c = chartObj();
+          if (c && c.$selection) {
+            c.$selection.a = null;
+            c.$selection.b = null;
+            c.$selection.dragging = false;
+            c.update('none');
+          }
+          var clearBtn = document.getElementById(selIds[id]);
+          if (clearBtn) clearBtn.style.display = 'none';
+        }
+
+        // Runs BEFORE the chart's own handlers (capture phase)
+        function onTouchStart(e) {
+          if (e.touches.length >= 2) {
+            multi = true;
+            wipeSelection();
+            e.stopImmediatePropagation(); // highlight code never sees it
+          } else if (multi) {
+            e.stopImmediatePropagation();
+          }
+        }
+
+        function onTouchMove(e) {
+          if (multi || e.touches.length >= 2) {
+            multi = true;
+            e.stopImmediatePropagation();
+          }
+        }
+
+        function onTouchEnd(e) {
+          if (multi) {
+            e.stopImmediatePropagation();
+            wipeSelection();
+            // all fingers up: back to normal
+            if (e.touches.length === 0) multi = false;
+          }
+        }
+
+        canvas.addEventListener('touchstart', onTouchStart, { capture: true, passive: false });
+        canvas.addEventListener('touchmove', onTouchMove, { capture: true, passive: false });
+        canvas.addEventListener('touchend', onTouchEnd, { capture: true, passive: false });
+        canvas.addEventListener('touchcancel', onTouchEnd, { capture: true, passive: false });
+      });
+    })();
   </script>
 </body>
 </html>
