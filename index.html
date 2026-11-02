@@ -527,7 +527,122 @@
       margin: 22px 0 6px;
     }
     .history-body p { margin: 0 0 12px; }
+        /* ===== Business-card theme: light grey, black ink, spaced capitals ===== */
+    :root {
+      color-scheme: light;
+      --paper: #e6e6e6;   /* the exact grey from your card */
+      --ink: #000000;
+      --accent: #000000;
+      --text: #000000;
+      --soft: #2b2b2b;
+      --muted: #555555;
+      --card: #e6e6e6;
+      --line: rgba(0, 0, 0, 0.22);
+    }
+    html, body { background: var(--paper); color: var(--ink); }
+    body {
+      font-family: 'Montserrat', -apple-system, 'Segoe UI', sans-serif;
+      font-weight: 400;
+    }
+
+    /* Top bar */
+    nav, .nav {
+      background: rgba(230, 230, 230, 0.92) !important;
+      -webkit-backdrop-filter: saturate(160%) blur(12px);
+      backdrop-filter: saturate(160%) blur(12px);
+      border-bottom: 1px solid #000 !important;
+    }
+
+    /* Spaced capitals, like the name on your card */
+    h1, h2, h3, .section-title, .label {
+      font-weight: 400;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+    h1 {
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 10px;
+    }
+    .section-title {
+      padding-bottom: 10px;
+      border-bottom: 1px solid #000;
+    }
+
+    /* Tabs */
+    .tab {
+      font-family: inherit;
+      font-size: 0.78rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      background: transparent;
+      color: #000;
+      border: 1px solid transparent;
+      border-radius: 0;
+      box-shadow: none;
+      text-shadow: none;
+    }
+    .tab:hover { border-color: #000; }
+    .tab.active { background: #000; color: var(--paper); border-color: #000; }
+
+    /* Chart buttons */
+    #curve-clear, #curve-reset, #btc-clear {
+      font-family: inherit;
+      letter-spacing: 0.08em;
+      background: transparent;
+      color: #000;
+      border: 1px solid #000;
+      border-radius: 0;
+      box-shadow: none;
+    }
+    #curve-clear:hover, #curve-reset:hover, #btc-clear:hover {
+      background: #000;
+      color: var(--paper);
+    }
+
+    /* Cards and boxes: flat, thin line */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 0;
+      box-shadow: none;
+    }
+    .history-box { border: 1px solid #000; border-radius: 0; }
+
+    /* Small tags */
+    .chip {
+      background: transparent;
+      color: #000;
+      border: 1px solid #000;
+      border-radius: 0;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+    }
+
+    /* Links */
+    a {
+      color: #000;
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
+    a:hover { opacity: 0.6; }
+
+    .role-line:hover { text-shadow: none; color: #000; }
+    footer { border-top: 1px solid #000; color: #000; }
+
+    /* Dark photo areas keep light text so they stay readable */
+    .home-hero, .home-hero *, .follow-banner, .follow-banner * {
+      color: #f5f5f7;
+      text-shadow: none;
+      border-color: rgba(245, 245, 247, 0.6);
+    }
   </style>
+    <meta name="theme-color" content="#e6e6e6">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -1238,6 +1353,36 @@
         canvas.addEventListener('touchend', onTouchEnd, { capture: true, passive: false });
         canvas.addEventListener('touchcancel', onTouchEnd, { capture: true, passive: false });
       });
+    })();
+        // ===== Card theme: black ink on the charts =====
+    (function () {
+      var ink = '#000000';
+      var grid = 'rgba(0, 0, 0, 0.12)';
+      var tries = 0;
+      var timer = setInterval(function () {
+        tries++;
+        var done = 0;
+        ['curve-chart', 'btc-chart'].forEach(function (id) {
+          var cv = document.getElementById(id);
+          if (!cv || !window.Chart || !Chart.getChart) return;
+          var c = Chart.getChart(cv);
+          if (!c) return;
+          done++;
+          if (c.$inked) return;
+          c.$inked = true;
+          var s = c.options.scales || {};
+          Object.keys(s).forEach(function (k) {
+            s[k].ticks = s[k].ticks || {};
+            s[k].ticks.color = ink;
+            s[k].grid = s[k].grid || {};
+            s[k].grid.color = grid;
+            s[k].border = s[k].border || {};
+            s[k].border.color = ink;
+          });
+          c.update('none');
+        });
+        if (done >= 2 || tries > 40) clearInterval(timer);
+      }, 500);
     })();
   </script>
 </body>
