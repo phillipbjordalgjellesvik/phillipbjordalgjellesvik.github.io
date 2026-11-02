@@ -1441,6 +1441,49 @@
         if (done >= 2 || tries > 40) clearInterval(timer);
       }, 500);
     })();
+        // ===== Click the name in the top bar to go Home =====
+    (function () {
+      var bar = document.querySelector('nav') || document.querySelector('header');
+      if (!bar) return;
+
+      // Find the element in the top bar that holds your name
+      var candidates = bar.querySelectorAll('a, div, span, strong, b, h1, h2');
+      var nameEl = null;
+      for (var i = 0; i < candidates.length; i++) {
+        var el = candidates[i];
+        if (el.closest('.tab') || el.classList.contains('tab')) continue;
+        if (el.children.length > 0) continue;
+        var txt = (el.textContent || '').toLowerCase();
+        var box = el.getBoundingClientRect();
+        var barBox = bar.getBoundingClientRect();
+        var inLeftHalf = box.left < barBox.left + barBox.width / 2;
+        if (inLeftHalf && txt.indexOf('gjellesvik') !== -1) {
+          nameEl = el;
+          break;
+        }
+      }
+      if (!nameEl) return;
+
+      nameEl.style.cursor = 'pointer';
+      nameEl.setAttribute('role', 'link');
+      nameEl.setAttribute('tabindex', '0');
+      nameEl.setAttribute('title', 'Home');
+
+      function goHome(e) {
+        if (e) e.preventDefault();
+        if (typeof showPage === 'function') {
+          showPage('home');
+        } else {
+          location.hash = '#home';
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      nameEl.addEventListener('click', goHome);
+      nameEl.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') goHome(e);
+      });
+    })();
   </script>
 </body>
 </html>
