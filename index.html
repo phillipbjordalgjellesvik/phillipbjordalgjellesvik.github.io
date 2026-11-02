@@ -486,6 +486,47 @@
       .home-hero { min-height: 48vh; padding: 36px 20px; }
       .home-btn { padding: 11px 22px; }
     }
+        /* ===== My history (tap to open) ===== */
+    .history-box {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      margin: 24px 0;
+      overflow: hidden;
+    }
+    .history-box summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 18px 22px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .history-box summary::-webkit-details-marker { display: none; }
+    .history-box summary::after {
+      content: '+';
+      font-size: 1.5rem;
+      font-weight: 400;
+      color: var(--accent);
+      transition: transform 0.25s ease;
+    }
+    .history-box[open] summary::after { transform: rotate(45deg); }
+    .history-box summary:hover { color: var(--accent); }
+    .history-body {
+      padding: 0 22px 22px;
+      color: var(--soft);
+      line-height: 1.7;
+    }
+    .history-body h3 {
+      color: var(--text);
+      font-size: 1rem;
+      margin: 22px 0 6px;
+    }
+    .history-body p { margin: 0 0 12px; }
   </style>
 </head>
 <body>
@@ -535,6 +576,33 @@
           <div class="contact">Get in touch: <a href="mailto:Phillipbjordal@gmail.com">Phillipbjordal@gmail.com</a></div>
         </div>
       </div>
+                <details class="history-box">
+        <summary>My history</summary>
+        <div class="history-body">
+
+          <h3>Born in Singapore</h3>
+          <p>I was born in Singapore and lived there for the first nine years of my life. Growing up there gave me an international view from very early on.</p>
+
+          <h3>Norway and then Baltimore</h3>
+          <p>At nine I moved to Norway and went to school here until high school. When high school came around, I moved to Baltimore in the United States and finished high school there.</p>
+
+          <h3>Back to Norway</h3>
+          <p>After graduating I moved back to Norway. I needed one extra year to have my American high school degree recognised, and I worked at the convenience store Joker while I studied. I kept working there during my gap year too.</p>
+
+          <h3>Travel, and a setback</h3>
+          <p>In January 2024 I travelled to Asia and visited several countries. During the trip I had a serious moped accident that crushed my foot. I had to learn to walk again, and I was later diagnosed with arthritis in several bones in my foot. It was a long and hard process, and it is something I still manage today.</p>
+
+          <h3>Starting at BI</h3>
+          <p>After surgery and rehabilitation I came back to Norway and started at BI Norwegian Business School in the summer of 2024. Along the way I also needed knee surgery and physical therapy, which pushed some of my plans back.</p>
+
+          <h3>Driving a taxi while studying</h3>
+          <p>I wanted to work while studying, but most jobs needed a lot of standing, which my foot could not handle. So I became a taxi driver, which let me earn money and keep studying.</p>
+
+          <h3>Where I am now</h3>
+          <p>I am in my final year at BI and expect to finish in 2027.</p>
+
+        </div>
+      </details>
       <div class="entry-cols">
       <div>
       <h2 class="section-title">Education</h2>
