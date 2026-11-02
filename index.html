@@ -1202,10 +1202,10 @@
             plugins: {
               legend: { display: false },
                             zoom: {
-                pan: { enabled: true, mode: 'x', modifierKey: 'shift' },
+                pan: { enabled: false, mode: 'x', modifierKey: 'shift' },
                 zoom: {
                   wheel: { enabled: false },
-                  pinch: { enabled: true },
+                  pinch: { enabled: false },
                   mode: 'x'
                 },
                 limits: { x: { minRange: 10 } }
@@ -1510,6 +1510,49 @@
       nameEl.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' || e.key === ' ') goHome(e);
       });
+    })();
+        // ===== Highlight and zoom switched off on both charts =====
+    (function () {
+      ['curve-chart', 'btc-chart'].forEach(function (id) {
+        var canvas = document.getElementById(id);
+        if (!canvas) return;
+        // Stop every mouse and touch gesture from reaching the highlight and zoom code
+        ['mousedown', 'mousemove', 'mouseup', 'touchstart', 'touchmove', 'touchend', 'dblclick', 'wheel'].forEach(function (type) {
+          canvas.addEventListener(type, function (e) {
+            e.stopImmediatePropagation();
+          }, { capture: true, passive: true });
+        });
+      });
+
+      // Hide the highlight and zoom buttons
+      ['curve-clear', 'curve-reset', 'btc-clear'].forEach(function (id) {
+        var b = document.getElementById(id);
+        if (b) b.style.setProperty('display', 'none', 'important');
+      });
+
+      // Keep them hidden even if the page tries to show them again
+      var style = document.createElement('style');
+      style.textContent = '#curve-clear, #curve-reset, #btc-clear { display: none !important; }' +
+        ' canvas { cursor: default !important; touch-action: pan-y !important; }';
+      document.head.appendChild(style);
+
+      // Remove any highlight that might already be drawn
+      var tries = 0;
+      var timer = setInterval(function () {
+        tries++;
+        ['curve-chart', 'btc-chart'].forEach(function (id) {
+          var cv = document.getElementById(id);
+          if (!cv || !window.Chart || !Chart.getChart) return;
+          var c = Chart.getChart(cv);
+          if (c && c.$selection) {
+            c.$selection.a = null;
+            c.$selection.b = null;
+            c.$selection.dragging = false;
+            c.update('none');
+          }
+        });
+        if (tries > 10) clearInterval(timer);
+      }, 500);
     })();
   </script>
 </body>
