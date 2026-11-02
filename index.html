@@ -1511,48 +1511,110 @@
         if (e.key === 'Enter' || e.key === ' ') goHome(e);
       });
     })();
-        // ===== Highlight and zoom switched off on both charts =====
+      // ===== Highlight and zoom switched off on both charts =====
     (function () {
-      ['curve-chart', 'btc-chart'].forEach(function (id) {
-        var canvas = document.getElementById(id);
-        if (!canvas) return;
-        // Stop every mouse and touch gesture from reaching the highlight and zoom code
-        ['mousedown', 'mousemove', 'mouseup', 'touchstart', 'touchmove', 'touchend', 'dblclick', 'wheel'].forEach(function (type) {
-          canvas.addEventListener(type, function (e) {
-            e.stopImmediatePropagation();
-          }, { capture: true, passive: true });
-        });
-      });
-
-      // Hide the highlight and zoom buttons
-      ['curve-clear', 'curve-reset', 'btc-clear'].forEach(function (id) {
-        var b = document.getElementById(id);
-        if (b) b.style.setProperty('display', 'none', 'important');
-      });
-
-      // Keep them hidden even if the page tries to show them again
+      // Hide the highlight and zoom buttons for good
       var style = document.createElement('style');
       style.textContent = '#curve-clear, #curve-reset, #btc-clear { display: none !important; }' +
         ' canvas { cursor: default !important; touch-action: pan-y !important; }';
       document.head.appendChild(style);
 
-      // Remove any highlight that might already be drawn
-      var tries = 0;
-      var timer = setInterval(function () {
-        tries++;
-        ['curve-chart', 'btc-chart'].forEach(function (id) {
-          var cv = document.getElementById(id);
-          if (!cv || !window.Chart || !Chart.getChart) return;
-          var c = Chart.getChart(cv);
-          if (c && c.$selection) {
-            c.$selection.a = null;
-            c.$selection.b = null;
-            c.$selection.dragging = false;
-            c.update('none');
-          }
+      // Stop the drag highlight and zoom from starting, but let everything else through
+      ['curve-chart', 'btc-chart'].forEach(function (id) {
+        var canvas = document.getElementById(id);
+        if (!canvas) return;
+        ['mousedown', 'dblclick', 'wheel'].forEach(function (type) {
+          canvas.addEventListener(type, function (e) {
+            if (e.__scrub) return;
+            e.stopImmediatePropagation();
+          }, { capture: true });
         });
-        if (tries > 10) clearInterval(timer);
-      }, 500);
+        ['touchstart'].forEach(function (type) {
+          canvas.addEventListener(type, function (e) {
+            if (e.touches && e.touches.length > 1) e.stopImmediatePropagation();
+          }, { capture: true, passive: true });
+        });
+      });
+    })();
+        // ===== Touch a chart, its big number follows =====
+    (function () {
+      function setup(canvasId, valueId, format, dateFormat) {
+        var canvas = document.getElementById(canvasId);
+        var valueEl = document.getElementById(valueId);
+        if (!canvas || !valueEl) return;
+
+        // A small date line under the big number
+        var dateEl = document.createElement('div');
+        dateEl.style.cssText = 'font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase;min-height:1.2em;margin:-2px 0 6px;color:var(--muted,#555);';
+        valueEl.insertAdjacentElement('afterend', dateEl);
+
+        var liveText = null;
+        var touching = false;
+
+        function chartObj() {
+          return (window.Chart && Chart.getChart) ? Chart.getChart(canvas) : null;
+        }
+
+        function showAt(clientX) {
+          var c = chartObj();
+          if (!c || !c.data || !c.data.datasets[0]) return;
+          var data = c.data.datasets[0].data;
+          var labels = c.data.labels;
+          if (!data.length) return;
+
+          var rect = canvas.getBoundingClientRect();
+          var idx = Math.round(c.scales.x.getValueForPixel(clientX - rect.left));
+          idx = Math.max(0, Math.min(data.length - 1, idx));
+
+          var v = data[idx];
+          if (v && typeof v === 'object') v = v.y;
+          if (v == null || isNaN(v)) return;
+
+          if (!touching) {
+            liveText = valueEl.textContent;
+            touching = true;
+          }
+          valueEl.textContent = format(v);
+
+          var lab = labels[idx];
+          if (lab != null) {
+            var d = new Date(lab);
+            dateEl.textContent = isNaN(d) ? String(lab) : dateFormat(d);
+          }
+        }
+
+        function back() {
+          if (!touching) return;
+          touching = false;
+          if (liveText != null) valueEl.textContent = liveText;
+          dateEl.textContent = '';
+        }
+
+        canvas.addEventListener('mousemove', function (e) { showAt(e.clientX); });
+        canvas.addEventListener('mouseleave', back);
+        canvas.addEventListener('touchstart', function (e) {
+          if (e.touches.length === 1) showAt(e.touches[0].clientX);
+        }, { passive: true });
+        canvas.addEventListener('touchmove', function (e) {
+          if (e.touches.length === 1) showAt(e.touches[0].clientX);
+        }, { passive: true });
+        canvas.addEventListener('touchend', back, { passive: true });
+        canvas.addEventListener('touchcancel', back, { passive: true });
+      }
+
+      function fullDate(d) {
+        return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+      }
+
+      // Bitcoin: dollars, no decimals
+      setup('btc-chart', 'btc-price', function (v) {
+        return '$' + Math.round(v).toLocaleString('en-US');
+      }, fullDate);
+
+      // 10Y minus 2Y spread: percent, two decimals
+      setup('curve-chart', 'curve-value', function (v) {
+        return v.toFixed(2) + '%';
+      }, fullDate);
     })();
   </script>
 </body>
