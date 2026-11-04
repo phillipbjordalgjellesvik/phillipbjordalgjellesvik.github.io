@@ -399,8 +399,10 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 28px;
     }
-    #page-follow .card canvas {
-      min-height: 340px;
+    /* Chart.js fills this box exactly, so the chart is never stretched */
+    #page-follow .card .chart-box {
+      position: relative;
+      height: 340px;
     }
 
     /* Text uses the width instead of running down a narrow column */
@@ -444,7 +446,7 @@
     /* Very big monitors */
     @media (min-width: 1500px) {
       main, .nav-inner, footer { max-width: 1360px; }
-      #page-follow .card canvas { min-height: 400px; }
+      #page-follow .card .chart-box { height: 400px; }
       .banner-img { height: 300px; }
       .banner-img.tall { height: 260px; }
     }
@@ -476,8 +478,8 @@
         padding-left: 14px;
         padding-right: 14px;
       }
-      #page-follow .card canvas {
-        min-height: 260px;
+      #page-follow .card .chart-box {
+        height: 260px;
       }
       .card { padding: 20px; }
       .banner-img { height: 140px; }
@@ -904,7 +906,7 @@
           <div class="label">Bitcoin (USD)</div>
           <div class="big" id="btc-price">...</div>
           <div id="btc-change"></div>
-          <canvas id="btc-chart"></canvas>
+          <div class="chart-box"><canvas id="btc-chart"></canvas></div>
           <div id="btc-selection" class="selection-box">Click and drag across the chart to mark a period.</div>
           <button class="clear-btn" id="btc-clear">Clear selection</button>
         </div>
@@ -921,7 +923,7 @@
             <button class="range-btn" data-years="25">25Y</button>
             <button class="range-btn active" data-years="0">Max</button>
           </div>
-          <canvas id="curve-chart"></canvas>
+          <div class="chart-box"><canvas id="curve-chart"></canvas></div>
           <div id="curve-selection" class="selection-box">Click and drag across the chart to mark a period.</div>
           <button class="clear-btn" id="curve-clear">Clear selection</button>
                     <button class="clear-btn" id="curve-reset" style="display:none">Reset zoom</button>
@@ -1155,6 +1157,8 @@
           type: 'line',
           data: { labels: btcLabels, datasets: [{ data: btcValues, borderColor: '#f7931a', borderWidth: 1.5, pointRadius: 0, pointHoverRadius: 4, tension: 0.2 }] },
           options: {
+            maintainAspectRatio: false,
+            animation: false,
             interaction: { mode: 'index', intersect: false },
             plugins: { legend: { display: false }, tooltip: { enabled: false } },
             scales: { x: { ticks: { maxTicksLimit: 5 } }, y: { ticks: { callback: v => '$' + v.toLocaleString() } } }
@@ -1197,6 +1201,7 @@
             ]
           },
           options: {
+            maintainAspectRatio: false,
             animation: false,
             interaction: { mode: 'index', intersect: false },
             plugins: {
