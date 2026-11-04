@@ -632,6 +632,9 @@
     a:hover { opacity: 0.6; }
 
     .role-line:hover { text-shadow: none; color: #000; }
+    /* The role line links to BI but keeps its own look: no underline or fade */
+    a.role { color: var(--text); text-decoration: none; cursor: pointer; }
+    a.role:hover { opacity: 1; text-decoration: none; }
     footer { border-top: 1px solid #000; color: #000; }
 
     /* Dark photo areas keep light text so they stay readable */
@@ -765,7 +768,7 @@
         <div class="avatar-fallback" id="avatar-fallback">PG</div>
         <div class="hero-text">
           <h1>Phillip Bjordal Gjellesvik</h1>
-          <div class="role">Business student at BI Norwegian Business School</div>
+          <a class="role" href="https://www.bi.edu" target="_blank" rel="noopener">Business student at BI Norwegian Business School</a>
           <p class="pitch">I am a bachelor student in business administration with a strong interest in financial markets, particularly Bitcoin and the US Treasury yield curve. I combine an international education with hands-on experience in customer service, delivery and transport, and I enjoy negotiation, problem solving and working with people.</p>
           <div class="chips">
             <span class="chip">Financial markets</span>
