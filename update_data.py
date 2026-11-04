@@ -8,9 +8,13 @@ import requests
 # ---- Yahoo Finance top stories (RSS, no key needed) ----
 # Runs first and on its own: if Yahoo is down, the old news.json is kept
 # and the market data below still updates.
+# Tried in order until one works
 NEWS_FEEDS = [
     "https://finance.yahoo.com/news/rssindex",
     "https://finance.yahoo.com/rss/topstories",
+    "https://finance.yahoo.com/rss/",
+    # Yahoo's feed-reader headlines for the S&P 500, Dow and Nasdaq, as a last resort
+    "https://feeds.finance.yahoo.com/rss/2.0/headline?s=%5EGSPC,%5EDJI,%5EIXIC&region=US&lang=en-US",
 ]
 MEDIA_NS = "{http://search.yahoo.com/mrss/}"
 
@@ -47,6 +51,7 @@ def fetch_news():
                 "source": (item.findtext("source") or "").strip() or None,
                 "image": image,
             })
+        print(f"News feed {url}: {len(stories)} stories")
         if stories:
             stories.sort(key=lambda s: s["published"] or "", reverse=True)
             return stories[:25]
