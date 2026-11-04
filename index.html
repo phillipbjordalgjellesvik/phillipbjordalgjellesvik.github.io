@@ -1674,10 +1674,6 @@
         var liveText = null;
         var touching = false;
 
-        function chartObj() {
-          return (window.Chart && Chart.getChart) ? Chart.getChart(canvas) : null;
-        }
-
         // Show the exact point the hover circle is on (the chart picks it)
         function showActive(c) {
           var hit = c.getActiveElements().filter(function (a) { return a.datasetIndex === 0; })[0];
@@ -1707,28 +1703,31 @@
           dateEl.textContent = '';
         }
 
-        // Finger lifted: hide the circle too, so it never disagrees with the number
-        function lift() {
-          back();
-          var c = chartObj();
-          if (c && c.getActiveElements().length) {
-            c.setActiveElements([]);
-            c.update('none');
-          }
-        }
-
+        // The number only changes when the chart moves or hides its circle, so the two
+        // always agree. Mouse leaving the chart hides both; lifting a finger on a phone
+        // changes nothing, so the circle and its number stay on the last point touched.
         followers[canvasId] = showActive;
-        canvas.addEventListener('mouseleave', back);
-        canvas.addEventListener('touchend', lift, { passive: true });
-        canvas.addEventListener('touchcancel', lift, { passive: true });
       }
 
       // Runs after each chart has moved its hover circle, so the big number
       // always shows the point the circle is on
       var followers = {};
+
+      // Was the last input a finger or a real mouse? (Phones fire fake mouse
+      // events after a tap, but never fake pointer events, so this tells them apart.)
+      var lastPointer = 'mouse';
+      ['pointerdown', 'pointermove'].forEach(function (type) {
+        window.addEventListener(type, function (e) { lastPointer = e.pointerType; }, { capture: true, passive: true });
+      });
+
       if (window.Chart && Chart.register) {
         Chart.register({
           id: 'bigNumberFollowsCircle',
+          // After a tap, phones send a fake "mouse left" at random moments, which
+          // would hide the circle. Ignore it for fingers, so the circle stays put.
+          beforeEvent: function (chart, args) {
+            if (args.event.type === 'mouseout' && lastPointer !== 'mouse' && followers[chart.canvas.id]) return false;
+          },
           afterEvent: function (chart) {
             var follow = followers[chart.canvas.id];
             if (follow) follow(chart);
