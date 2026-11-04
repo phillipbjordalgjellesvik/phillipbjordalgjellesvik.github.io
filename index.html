@@ -586,6 +586,14 @@
     }
     .tab:hover { border-color: #000; }
     .tab.active { background: #000; color: var(--paper); border-color: #000; }
+    /* Education and work: dates always sit underneath, never to the side */
+    .entry {
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 6px;
+    }
+    .entry .when { white-space: normal; }
+
     /* No grey box behind the tabs: they sit on the same grey as the page */
     .tabs {
       background: transparent;
