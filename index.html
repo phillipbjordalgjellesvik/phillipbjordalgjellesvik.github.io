@@ -1076,13 +1076,13 @@
       <div class="dash-intro news-intro">
         <a class="news-back" href="#about" data-goto="about">&larr; Back to About me</a>
         <h1>Financial markets</h1>
-        <p>Top stories from Yahoo Finance. This page updates automatically every hour.</p>
+        <p>The latest stock market headlines from Yahoo Finance. This page updates automatically every hour.</p>
         <div class="news-updated" id="news-updated"></div>
       </div>
       <ol class="news-list" id="news-list">
         <li class="news-empty">Loading the latest stories...</li>
       </ol>
-      <p class="news-credit">Headlines and links from <a href="https://finance.yahoo.com/" target="_blank" rel="noopener">Yahoo Finance</a>. Stories open on Yahoo Finance in a new tab.</p>
+      <p class="news-credit">Headlines collected by <a href="https://finance.yahoo.com/" target="_blank" rel="noopener">Yahoo Finance</a>. Each story opens on its own website in a new tab.</p>
     </section>
   </main>
 
@@ -1743,6 +1743,15 @@
         return d + (d === 1 ? ' day ago' : ' days ago');
       }
 
+      // Name the website a story comes from, e.g. fool.com -> Fool.com
+      function siteName(link) {
+        try {
+          var host = new URL(link).hostname.replace(/^www\./, '');
+          if (/(^|\.)yahoo\.com$/.test(host)) return 'Yahoo Finance';
+          return host.charAt(0).toUpperCase() + host.slice(1);
+        } catch (e) { return 'Yahoo Finance'; }
+      }
+
       function message(text) {
         list.innerHTML = '';
         var li = document.createElement('li');
@@ -1771,7 +1780,7 @@
           body.className = 'news-body';
           var meta = document.createElement('div');
           meta.className = 'news-meta';
-          meta.textContent = [s.source || 'Yahoo Finance', s.published ? ago(s.published) : ''].filter(Boolean).join(' \u00b7 ');
+          meta.textContent = [s.source || siteName(s.link), s.published ? ago(s.published) : ''].filter(Boolean).join(' \u00b7 ');
           var a = document.createElement('a');
           a.className = 'news-title';
           a.href = s.link;
