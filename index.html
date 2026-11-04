@@ -586,6 +586,13 @@
     }
     .tab:hover { border-color: #000; }
     .tab.active { background: #000; color: var(--paper); border-color: #000; }
+    /* No grey box behind the tabs: they sit on the same grey as the page */
+    .tabs {
+      background: transparent;
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+      border-bottom: none;
+    }
 
     /* Chart buttons */
     #curve-clear, #curve-reset, #btc-clear {
