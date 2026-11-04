@@ -1,7 +1,65 @@
 import json
 import os
+import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 import requests
+
+# ---- Yahoo Finance top stories (RSS, no key needed) ----
+# Runs first and on its own: if Yahoo is down, the old news.json is kept
+# and the market data below still updates.
+NEWS_FEEDS = [
+    "https://finance.yahoo.com/news/rssindex",
+    "https://finance.yahoo.com/rss/topstories",
+]
+MEDIA_NS = "{http://search.yahoo.com/mrss/}"
+
+
+def fetch_news():
+    headers = {"User-Agent": "Mozilla/5.0 (compatible; personal-site-updater)"}
+    for url in NEWS_FEEDS:
+        try:
+            resp = requests.get(url, headers=headers, timeout=30)
+            resp.raise_for_status()
+            root = ET.fromstring(resp.content)
+        except Exception as e:
+            print(f"News feed failed ({url}): {e}")
+            continue
+        stories = []
+        for item in root.iter("item"):
+            title = (item.findtext("title") or "").strip()
+            link = (item.findtext("link") or "").strip()
+            if not title or not link.startswith("http"):
+                continue
+            published = None
+            try:
+                published = parsedate_to_datetime(item.findtext("pubDate")).astimezone(timezone.utc).isoformat()
+            except Exception:
+                pass
+            image = None
+            media = item.find(MEDIA_NS + "content")
+            if media is not None and (media.get("url") or "").startswith("http"):
+                image = media.get("url")
+            stories.append({
+                "title": title,
+                "link": link,
+                "published": published,
+                "source": (item.findtext("source") or "").strip() or None,
+                "image": image,
+            })
+        if stories:
+            stories.sort(key=lambda s: s["published"] or "", reverse=True)
+            return stories[:25]
+    return []
+
+
+stories = fetch_news()
+if stories:
+    with open("news.json", "w") as f:
+        json.dump({"updated": datetime.now(timezone.utc).isoformat(), "stories": stories}, f)
+    print(f"Updated news.json with {len(stories)} stories")
+else:
+    print("No news fetched, keeping the previous news.json")
 
 FRED_KEY = os.environ["FRED_API_KEY"]
 
