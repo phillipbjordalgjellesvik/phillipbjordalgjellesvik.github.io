@@ -1678,18 +1678,12 @@
           return (window.Chart && Chart.getChart) ? Chart.getChart(canvas) : null;
         }
 
-        function showAt(clientX) {
-          var c = chartObj();
-          if (!c || !c.data || !c.data.datasets[0]) return;
-          var data = c.data.datasets[0].data;
-          var labels = c.data.labels;
-          if (!data.length) return;
-
-          var rect = canvas.getBoundingClientRect();
-          var idx = Math.round(c.scales.x.getValueForPixel(clientX - rect.left));
-          idx = Math.max(0, Math.min(data.length - 1, idx));
-
-          var v = data[idx];
+        // Show the exact point the hover circle is on (the chart picks it)
+        function showActive(c) {
+          var hit = c.getActiveElements().filter(function (a) { return a.datasetIndex === 0; })[0];
+          if (!hit) { back(); return; }
+          var idx = hit.index;
+          var v = c.data.datasets[0].data[idx];
           if (v && typeof v === 'object') v = v.y;
           if (v == null || isNaN(v)) return;
 
@@ -1699,7 +1693,7 @@
           }
           valueEl.textContent = format(v);
 
-          var lab = labels[idx];
+          var lab = c.data.labels[idx];
           if (lab != null) {
             var d = new Date(lab);
             dateEl.textContent = isNaN(d) ? String(lab) : dateFormat(d);
@@ -1713,16 +1707,33 @@
           dateEl.textContent = '';
         }
 
-        canvas.addEventListener('mousemove', function (e) { showAt(e.clientX); });
+        // Finger lifted: hide the circle too, so it never disagrees with the number
+        function lift() {
+          back();
+          var c = chartObj();
+          if (c && c.getActiveElements().length) {
+            c.setActiveElements([]);
+            c.update('none');
+          }
+        }
+
+        followers[canvasId] = showActive;
         canvas.addEventListener('mouseleave', back);
-        canvas.addEventListener('touchstart', function (e) {
-          if (e.touches.length === 1) showAt(e.touches[0].clientX);
-        }, { passive: true });
-        canvas.addEventListener('touchmove', function (e) {
-          if (e.touches.length === 1) showAt(e.touches[0].clientX);
-        }, { passive: true });
-        canvas.addEventListener('touchend', back, { passive: true });
-        canvas.addEventListener('touchcancel', back, { passive: true });
+        canvas.addEventListener('touchend', lift, { passive: true });
+        canvas.addEventListener('touchcancel', lift, { passive: true });
+      }
+
+      // Runs after each chart has moved its hover circle, so the big number
+      // always shows the point the circle is on
+      var followers = {};
+      if (window.Chart && Chart.register) {
+        Chart.register({
+          id: 'bigNumberFollowsCircle',
+          afterEvent: function (chart) {
+            var follow = followers[chart.canvas.id];
+            if (follow) follow(chart);
+          }
+        });
       }
 
       function fullDate(d) {
