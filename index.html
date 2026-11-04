@@ -1234,9 +1234,7 @@
       canvas.addEventListener('mousedown', down);
       canvas.addEventListener('mousemove', move);
       window.addEventListener('mouseup', up);
-      canvas.addEventListener('touchstart', e => { e.preventDefault(); down(e); }, { passive: false });
-      canvas.addEventListener('touchmove', e => { e.preventDefault(); move(e); }, { passive: false });
-      canvas.addEventListener('touchend', up);
+      // No touch handlers: dragging a finger on a phone should not draw the blue period box
 
       function clear() { sel.a = sel.b = null; chart.update('none'); describe(); }
       clearBtn.addEventListener('click', clear);
