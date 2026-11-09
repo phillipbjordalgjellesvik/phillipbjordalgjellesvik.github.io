@@ -666,6 +666,31 @@
       box-shadow: 0 0 18px rgba(41, 151, 255, 0.45);
     }
 
+    /* Phones: four tabs in a 2 x 2 grid, so they always fit the screen */
+    @media (max-width: 700px) {
+      .tabs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        width: 100%;
+      }
+      .tabs .tab {
+        width: 100%;
+        padding: 10px 6px;
+        text-align: center;
+        line-height: 1.35;
+      }
+    }
+
+    /* ===== What I'm working on page ===== */
+    .work-intro { padding-top: 40px; }
+    .work-list { padding: 0 24px; margin: 20px 0 40px; }
+    .work-list .entry { border-top: 1px solid #000; border-radius: 0; margin: 0; padding: 22px 0; }
+    .work-list .entry:last-child { border-bottom: 1px solid #000; }
+    @media (max-width: 600px) {
+      .work-list { padding: 0; }
+    }
+
     /* ===== Financial markets news page ===== */
     .news-intro { padding-top: 40px; }
     .news-back {
@@ -846,6 +871,7 @@
                <button class="tab active" data-page="home">Home</button>
         <button class="tab" data-page="about">About me</button>
         <button class="tab" data-page="follow">What I follow</button>
+        <button class="tab" data-page="work">What I'm working on</button>
       </div>
     </div>
   </nav>
@@ -1090,6 +1116,27 @@
     </section>
 
     <!-- ================= FINANCIAL MARKETS NEWS ================= -->
+    <!-- ================= WHAT I'M WORKING ON ================= -->
+    <section class="page" id="page-work">
+      <div class="dash-intro work-intro">
+        <h1>What I'm working on</h1>
+        <p>Projects I am spending my time on right now.</p>
+      </div>
+      <div class="work-list">
+        <div class="entry">
+          <div class="title">This website</div>
+          <div class="where">Personal site on GitHub Pages</div>
+          <div class="note">A site that tracks Bitcoin and the US Treasury yield curve, with market data and financial news that update automatically every hour.</div>
+          <div class="when">Ongoing</div>
+        </div>
+        <div class="entry">
+          <div class="title">Bachelor of Business Administration (BBA)</div>
+          <div class="where">BI Norwegian Business School, Oslo, Norway</div>
+          <div class="when">2024 to 2027</div>
+        </div>
+      </div>
+    </section>
+
     <section class="page" id="page-news">
       <div class="dash-intro news-intro">
         <a class="news-back" href="#about" data-goto="about">&larr; Back to About me</a>
@@ -1116,7 +1163,7 @@
 
     // ---------- Section switching ----------
     const tabs = document.querySelectorAll('.tab');
-        const pages = { home: document.getElementById('page-home'), about: document.getElementById('page-about'), follow: document.getElementById('page-follow'), news: document.getElementById('page-news') };
+        const pages = { home: document.getElementById('page-home'), about: document.getElementById('page-about'), follow: document.getElementById('page-follow'), news: document.getElementById('page-news'), work: document.getElementById('page-work') };
     function showPage(name) {
       tabs.forEach(t => t.classList.toggle('active', t.dataset.page === name));
       Object.keys(pages).forEach(k => pages[k].classList.toggle('active', k === name));
